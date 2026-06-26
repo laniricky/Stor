@@ -74,7 +74,7 @@ class ExpenseRepository {
 
     fun create(userId: UUID, req: CreateExpenseRequest): ExpenseDto = transaction {
         val date = parseDate(req.date)
-        val newId = ExpensesTable.insertAndGetId {
+        val insertStatement = ExpensesTable.insert {
             it[this.userId] = userId
             it[title] = req.title.trim()
             it[description] = req.description?.trim()
@@ -84,6 +84,7 @@ class ExpenseRepository {
             it[this.date] = date
             it[notes] = req.notes?.trim()
         }
+        val newId = insertStatement[ExpensesTable.id]
         ExpensesTable.select { ExpensesTable.id eq newId }
             .single().toExpenseDto()
     }
@@ -138,7 +139,7 @@ class ExpenseRepository {
     }
 
     private fun ResultRow.toExpenseDto() = ExpenseDto(
-        id = this[ExpensesTable.id].value.toString(),
+        id = this[ExpensesTable.id].toString(),
         title = this[ExpensesTable.title],
         description = this[ExpensesTable.description],
         amount = this[ExpensesTable.amount].toDouble(),

@@ -35,13 +35,14 @@ class AuthService(
             val exists = UsersTable.select { UsersTable.email eq request.email.lowercase() }.count() > 0
             if (exists) throw ApiException.conflict("Email already registered")
 
-            val userId = UsersTable.insertAndGetId {
+            val insertStatement = UsersTable.insert {
                 it[name] = request.name.trim()
                 it[email] = request.email.lowercase().trim()
                 it[passwordHash] = BCrypt.hashpw(request.password, BCrypt.gensalt(12))
             }
+            val userId = insertStatement[UsersTable.id]
 
-            buildAuthResponse(userId.value, request.name.trim(), request.email.lowercase())
+            buildAuthResponse(userId, request.name.trim(), request.email.lowercase())
         }
     }
 
@@ -54,7 +55,7 @@ class AuthService(
                 throw ApiException.unauthorized("Invalid email or password")
             }
 
-            buildAuthResponse(user[UsersTable.id].value, user[UsersTable.name], user[UsersTable.email])
+            buildAuthResponse(user[UsersTable.id], user[UsersTable.name], user[UsersTable.email])
         }
     }
 
@@ -69,7 +70,7 @@ class AuthService(
                 throw ApiException.unauthorized("Refresh token expired")
             }
 
-            val userId = tokenRow[RefreshTokensTable.userId].value
+            val userId = tokenRow[RefreshTokensTable.userId]
             val user = UsersTable.select { UsersTable.id eq userId }
                 .singleOrNull() ?: throw ApiException.unauthorized("User not found")
 
@@ -93,7 +94,7 @@ class AuthService(
                 .singleOrNull() ?: return@transaction // Silent fail to prevent user enumeration
 
             PasswordResetTokensTable.insert {
-                it[userId] = user[UsersTable.id].value
+                it[userId] = user[UsersTable.id]
                 it[token] = resetToken
                 it[expiresAt] = Instant.now().plusSeconds(3600)
             }

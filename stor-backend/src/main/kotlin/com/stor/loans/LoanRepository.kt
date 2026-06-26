@@ -28,7 +28,7 @@ class LoanRepository {
     }
 
     fun create(userId: UUID, req: CreateLoanRequest): LoanDto = transaction {
-        val newId = LoansTable.insertAndGetId {
+        val insertStatement = LoansTable.insert {
             it[this.userId] = userId
             it[name] = req.name.trim()
             it[lender] = req.lender.trim()
@@ -40,6 +40,7 @@ class LoanRepository {
             it[startDate] = LocalDate.parse(req.startDate)
             it[endDate] = req.endDate?.let { v -> LocalDate.parse(v) }
         }
+        val newId = insertStatement[LoansTable.id]
         LoansTable.select { LoansTable.id eq newId }.single().toDto()
     }
 
@@ -106,7 +107,7 @@ class LoanRepository {
         val paid = original - remaining
         val pct = if (original > 0) (paid / original * 100).coerceIn(0.0, 100.0) else 0.0
         return LoanDto(
-            id = this[LoansTable.id].value.toString(),
+            id = this[LoansTable.id].toString(),
             name = this[LoansTable.name],
             lender = this[LoansTable.lender],
             originalAmount = original,

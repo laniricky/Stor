@@ -38,12 +38,13 @@ class RepaymentRepository(private val loanRepo: LoanRepository = LoanRepository(
         }
 
         val payAmount = BigDecimal.valueOf(req.amountPaid)
-        val newId = RepaymentsTable.insertAndGetId {
+        val insertStatement = RepaymentsTable.insert {
             it[this.loanId] = loanId
             it[amountPaid] = payAmount
             it[date] = LocalDate.parse(req.date)
             it[notes] = req.notes?.trim()
         }
+        val newId = insertStatement[RepaymentsTable.id]
 
         // Reduce loan balance
         loanRepo.reduceBalance(loanId, payAmount)
@@ -64,8 +65,8 @@ class RepaymentRepository(private val loanRepo: LoanRepository = LoanRepository(
     }
 
     private fun ResultRow.toDto() = RepaymentDto(
-        id = this[RepaymentsTable.id].value.toString(),
-        loanId = this[RepaymentsTable.loanId].value.toString(),
+        id = this[RepaymentsTable.id].toString(),
+        loanId = this[RepaymentsTable.loanId].toString(),
         amountPaid = this[RepaymentsTable.amountPaid].toDouble(),
         date = this[RepaymentsTable.date].toString(),
         notes = this[RepaymentsTable.notes],

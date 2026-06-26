@@ -45,13 +45,14 @@ class IncomeRepository {
     }
 
     fun create(userId: UUID, req: CreateIncomeRequest): IncomeDto = transaction {
-        val newId = IncomeTable.insertAndGetId {
+        val insertStatement = IncomeTable.insert {
             it[this.userId] = userId
             it[source] = req.source.trim()
             it[amount] = BigDecimal.valueOf(req.amount)
             it[date] = LocalDate.parse(req.date)
             it[notes] = req.notes?.trim()
         }
+        val newId = insertStatement[IncomeTable.id]
         IncomeTable.select { IncomeTable.id eq newId }.single().toDto()
     }
 
@@ -78,7 +79,7 @@ class IncomeRepository {
     }
 
     private fun ResultRow.toDto() = IncomeDto(
-        id = this[IncomeTable.id].value.toString(),
+        id = this[IncomeTable.id].toString(),
         source = this[IncomeTable.source],
         amount = this[IncomeTable.amount].toDouble(),
         date = this[IncomeTable.date].toString(),
