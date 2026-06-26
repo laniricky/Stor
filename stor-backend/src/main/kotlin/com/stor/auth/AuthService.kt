@@ -7,9 +7,24 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import java.time.Instant
+import java.util.Properties
 import java.util.UUID
+import javax.mail.Authenticator
+import javax.mail.Message
+import javax.mail.PasswordAuthentication
+import javax.mail.Session
+import javax.mail.Transport
+import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import io.ktor.server.application.Application
 
-class AuthService(private val jwtService: JwtService) {
+class AuthService(
+    private val jwtService: JwtService,
+    private val application: Application
+) {
 
     fun register(request: RegisterRequest): AuthResponse {
         if (request.name.isBlank()) throw ApiException.badRequest("Name is required")
@@ -70,19 +85,62 @@ class AuthService(private val jwtService: JwtService) {
     }
 
     fun forgotPassword(request: ForgotPasswordRequest) {
-        // In production: generate reset token, store it, send email
-        // Implementation uses placeholder email config
+        val email = request.email.lowercase().trim()
+        val resetToken = UUID.randomUUID().toString().replace("-", "")
+        
         transaction {
-            val user = UsersTable.select { UsersTable.email eq request.email.lowercase() }
+            val user = UsersTable.select { UsersTable.email eq email }
                 .singleOrNull() ?: return@transaction // Silent fail to prevent user enumeration
 
             PasswordResetTokensTable.insert {
                 it[userId] = user[UsersTable.id].value
-                it[token] = UUID.randomUUID().toString().replace("-", "")
+                it[token] = resetToken
                 it[expiresAt] = Instant.now().plusSeconds(3600)
             }
-            // TODO: Send email with reset link
         }
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                sendResetEmail(email, resetToken)
+            } catch (e: Exception) {
+                application.environment.log.error("Failed to send reset email to $email", e)
+            }
+        }
+    }
+
+    private fun sendResetEmail(toEmail: String, token: String) {
+        val config = application.environment.config
+        val host = config.propertyOrNull("smtp.host")?.getString() ?: System.getenv("SMTP_HOST")
+        val port = config.propertyOrNull("smtp.port")?.getString() ?: System.getenv("SMTP_PORT")
+        val username = config.propertyOrNull("smtp.username")?.getString() ?: System.getenv("SMTP_USERNAME")
+        val password = config.propertyOrNull("smtp.password")?.getString() ?: System.getenv("SMTP_PASSWORD")
+        val fromEmail = config.propertyOrNull("smtp.from")?.getString() ?: System.getenv("SMTP_FROM")
+
+        if (host == null || username == null || password == null || fromEmail == null) {
+            application.environment.log.warn("SMTP credentials not configured. Skipping email.")
+            return
+        }
+
+        val props = Properties().apply {
+            put("mail.smtp.host", host)
+            put("mail.smtp.port", port ?: "587")
+            put("mail.smtp.auth", "true")
+            put("mail.smtp.starttls.enable", "true")
+        }
+
+        val session = Session.getInstance(props, object : Authenticator() {
+            override fun getPasswordAuthentication() = PasswordAuthentication(username, password)
+        })
+
+        val message = MimeMessage(session).apply {
+            setFrom(InternetAddress(fromEmail))
+            setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail))
+            subject = "Stor - Password Reset"
+            val resetLink = "storapp://reset-password?token=$token"
+            setText("You requested a password reset. Click the following link to reset your password:\n\n$resetLink\n\nIf you did not request this, please ignore this email.")
+        }
+
+        Transport.send(message)
     }
 
     private fun buildAuthResponse(userId: UUID, name: String, email: String): AuthResponse {

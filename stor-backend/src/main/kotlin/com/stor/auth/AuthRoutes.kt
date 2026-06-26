@@ -11,7 +11,7 @@ import io.ktor.server.routing.*
 
 fun Route.authRoutes() {
     val jwtService = JwtService(application)
-    val authService = AuthService(jwtService)
+    val authService = AuthService(jwtService, application)
 
     route("/auth") {
         rateLimit(RateLimitName("auth")) {
