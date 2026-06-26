@@ -1,11 +1,11 @@
 package com.stor.loans
 
-
-import io.ktor.server.application.*
 import com.stor.common.userId
 import com.stor.loans.models.CreateLoanRequest
 import com.stor.loans.models.UpdateLoanRequest
 import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
