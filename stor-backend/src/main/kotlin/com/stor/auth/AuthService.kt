@@ -134,8 +134,8 @@ class AuthService(
 
         val message = MimeMessage(session).apply {
             setFrom(InternetAddress(fromEmail))
-            setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail))
-            subject = "Stor - Password Reset"
+            setRecipients(Message.RecipientType.TO, arrayOf(InternetAddress(toEmail)))
+            setSubject("Stor - Password Reset")
             val resetLink = "storapp://reset-password?token=$token"
             setText("You requested a password reset. Click the following link to reset your password:\n\n$resetLink\n\nIf you did not request this, please ignore this email.")
         }
