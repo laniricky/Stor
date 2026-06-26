@@ -23,7 +23,8 @@ class LoanRepository {
     }
 
     fun findById(id: UUID, userId: UUID): LoanDto = transaction {
-        LoansTable.selectAll().where { (LoansTable.id eq id) and (LoansTable.userId eq userId) }
+        LoansTable.selectAll()
+            .where { (LoansTable.id eq id) and (LoansTable.userId eq userId) }
             .singleOrNull()?.toDto() ?: throw ApiException.notFound("Loan not found")
     }
 
@@ -45,7 +46,8 @@ class LoanRepository {
     }
 
     fun update(id: UUID, userId: UUID, req: UpdateLoanRequest): LoanDto = transaction {
-        LoansTable.selectAll().where { (LoansTable.id eq id) and (LoansTable.userId eq userId) }
+        LoansTable.selectAll()
+            .where { (LoansTable.id eq id) and (LoansTable.userId eq userId) }
             .singleOrNull() ?: throw ApiException.notFound("Loan not found")
         LoansTable.update({ (LoansTable.id eq id) and (LoansTable.userId eq userId) }) {
             req.name?.let { v -> it[name] = v.trim() }
@@ -81,18 +83,20 @@ class LoanRepository {
     }
 
     fun findForSearch(userId: UUID, query: String): List<LoanDto> = transaction {
-        LoansTable.selectAll().where { (LoansTable.userId eq userId) and (LoansTable.name like "%$query%") }
+        LoansTable.selectAll()
+            .where { (LoansTable.userId eq userId) and (LoansTable.name like "%$query%") }
             .map { it.toDto() }
     }
 
     fun upcomingPayments(userId: UUID): List<LoanDto> = transaction {
         val today = LocalDate.now()
         val nextWeek = today.plusDays(7)
-        LoansTable.selectAll().where {
-            (LoansTable.userId eq userId) and
-            (LoansTable.status eq "active") and
-            (LoansTable.dueDay.isNotNull())
-        }
+        LoansTable.selectAll()
+            .where {
+                (LoansTable.userId eq userId) and
+                (LoansTable.status eq "active") and
+                (LoansTable.dueDay.isNotNull())
+            }
             .map { it.toDto() }
             .filter { loan ->
                 val dueDay = loan.dueDay ?: return@filter false
@@ -125,4 +129,3 @@ class LoanRepository {
 }
 
 private val LoansTable = com.stor.loans.models.LoansTable
-
