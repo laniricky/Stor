@@ -1,0 +1,315 @@
+Android Expense & Loan Tracker (Kotlin + Render + Neon)
+
+You are a senior Android and backend engineer.
+
+Build a production-ready personal finance application with the following stack:
+
+Tech Stack
+Android
+Kotlin
+Jetpack Compose
+MVVM
+Material 3
+Navigation Compose
+Coroutines
+Flow
+Retrofit
+Hilt
+Room (offline cache)
+DataStore for preferences
+Backend
+Kotlin + Ktor (preferred)
+REST API
+JWT Authentication
+BCrypt password hashing
+Hosted on Render
+Database
+PostgreSQL hosted on Neon.tech
+Main Goal
+
+Create a live personal finance application that allows a user to:
+
+Track daily expenses
+Track income
+Manage approximately five different loans
+Record repayments
+View balances in real time
+Generate reports and charts
+
+The backend must be the single source of truth.
+
+The Android app should sync automatically.
+
+Authentication
+
+Implement:
+
+Register
+Login
+Forgot Password
+JWT Authentication
+Refresh Tokens
+Secure password hashing
+Expense Module
+
+Each expense contains:
+
+id
+title
+description
+amount
+category
+payment method
+date
+notes
+
+Categories include:
+
+Food
+Transport
+Rent
+Utilities
+Shopping
+Entertainment
+Health
+Education
+Other
+
+Allow:
+
+Add
+Edit
+Delete
+Search
+Filter
+Monthly totals
+Income Module
+
+Store:
+
+Source
+Amount
+Date
+Notes
+
+Show:
+
+Monthly income
+Annual income
+Total income
+Loan Module
+
+Support multiple loans simultaneously.
+
+Each loan contains:
+
+Loan name
+Lender
+Original amount
+Remaining balance
+Interest rate
+Monthly payment
+Due date
+Start date
+End date
+Status
+
+Allow:
+
+Create
+Edit
+Delete
+Archive completed loans
+Repayment Module
+
+Each repayment stores:
+
+Loan
+Amount paid
+Date
+Notes
+
+Automatically:
+
+Reduce remaining balance
+Update loan progress
+Calculate percentage completed
+Dashboard
+
+Show:
+
+Total balance
+
+Monthly spending
+
+Monthly income
+
+Outstanding debt
+
+Today's spending
+
+Upcoming loan payments
+
+Recent transactions
+
+Expense chart
+
+Loan progress bars
+
+Reports
+
+Generate:
+
+Monthly report
+
+Yearly report
+
+Expenses by category
+
+Loan payment history
+
+Income vs Expenses
+
+Savings trend
+
+Notifications
+
+Reminder:
+
+Loan due tomorrow
+
+Loan due today
+
+Monthly budget exceeded
+
+Search
+
+Search everything:
+
+Expenses
+
+Income
+
+Loans
+
+Payments
+
+Sync
+
+Use REST API.
+
+Implement:
+
+Offline mode
+
+Automatic sync
+
+Conflict handling
+
+Retry failed uploads
+
+Security
+
+Use:
+
+HTTPS
+
+JWT
+
+Encrypted local storage
+
+Input validation
+
+SQL injection protection
+
+Rate limiting
+
+Backend API
+
+Create REST endpoints for:
+
+Authentication
+
+Expenses
+
+Income
+
+Loans
+
+Repayments
+
+Reports
+
+Dashboard
+
+Return JSON.
+
+Follow REST best practices.
+
+Database
+
+Design a normalized PostgreSQL schema.
+
+Include:
+
+Users
+
+Expenses
+
+Income
+
+Loans
+
+Repayments
+
+Categories
+
+Create migrations.
+
+Deliverables
+
+Generate:
+
+Complete Android project
+
+Complete backend project
+
+Database schema
+
+SQL migrations
+
+API documentation
+
+README
+
+Deployment guide for Render
+
+Environment variable configuration
+
+Neon database connection
+
+Testing instructions
+
+Code Quality
+
+Use clean architecture.
+
+Separate:
+
+Presentation
+
+Domain
+
+Data
+
+Dependency Injection
+
+Repository Pattern
+
+Error Handling
+
+Logging
+
+Comments only where necessary.
+
+Follow Kotlin coding conventions.

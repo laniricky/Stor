@@ -1,0 +1,23 @@
+# Gradle
+.gradle/
+build/
+app/build/
+stor-backend/build/
+stor-android/build/
+stor-android/app/build/
+
+# IDEs and environment
+.idea/
+*.iml
+.vscode/
+local.properties
+
+# Environment variables
+.env
+.env.production
+
+# Mac
+.DS_Store
+
+# Log files
+*.log
