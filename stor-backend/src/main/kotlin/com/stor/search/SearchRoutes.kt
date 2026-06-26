@@ -12,7 +12,7 @@ fun Route.searchRoutes() {
     get("/search") {
         val principal = call.principal<JWTPrincipal>()!!
         val query = call.request.queryParameters["q"] ?: ""
-        val type = call.request.queryParameters["type"]
-        call.respond(HttpStatusCode.OK, service.search(principal.userId(), query, type))
+        val searchType = call.request.queryParameters["type"]
+        call.respond(HttpStatusCode.OK, service.search(principal.userId(), query, searchType))
     }
 }
