@@ -12,7 +12,7 @@ import java.util.UUID
 class IncomeRepository {
 
     fun findAll(userId: UUID, month: Int? = null, year: Int? = null): Pair<List<IncomeDto>, Int> = transaction {
-        var query = IncomeTable.select { IncomeTable.userId eq userId }
+        var query = IncomeTable.selectAll().where { IncomeTable.userId eq userId }
         if (month != null && year != null) {
             val start = LocalDate.of(year, month, 1)
             val end = start.plusMonths(1).minusDays(1)
@@ -27,7 +27,7 @@ class IncomeRepository {
         val start = LocalDate.of(year, month, 1)
         val end = start.plusMonths(1).minusDays(1)
         IncomeTable.slice(IncomeTable.amount.sum())
-            .select { (IncomeTable.userId eq userId) and IncomeTable.date.between(start, end) }
+            .selectAll().where { (IncomeTable.userId eq userId) and IncomeTable.date.between(start, end) }
             .singleOrNull()?.get(IncomeTable.amount.sum())?.toDouble() ?: 0.0
     }
 
@@ -35,12 +35,12 @@ class IncomeRepository {
         val start = LocalDate.of(year, 1, 1)
         val end = LocalDate.of(year, 12, 31)
         IncomeTable.slice(IncomeTable.amount.sum())
-            .select { (IncomeTable.userId eq userId) and IncomeTable.date.between(start, end) }
+            .selectAll().where { (IncomeTable.userId eq userId) and IncomeTable.date.between(start, end) }
             .singleOrNull()?.get(IncomeTable.amount.sum())?.toDouble() ?: 0.0
     }
 
     fun findById(id: UUID, userId: UUID): IncomeDto = transaction {
-        IncomeTable.select { (IncomeTable.id eq id) and (IncomeTable.userId eq userId) }
+        IncomeTable.selectAll().where { (IncomeTable.id eq id) and (IncomeTable.userId eq userId) }
             .singleOrNull()?.toDto() ?: throw ApiException.notFound("Income record not found")
     }
 
@@ -53,11 +53,11 @@ class IncomeRepository {
             it[notes] = req.notes?.trim()
         }
         val newId = insertStatement[IncomeTable.id]
-        IncomeTable.select { IncomeTable.id eq newId }.single().toDto()
+        IncomeTable.selectAll().where { IncomeTable.id eq newId }.single().toDto()
     }
 
     fun update(id: UUID, userId: UUID, req: UpdateIncomeRequest): IncomeDto = transaction {
-        IncomeTable.select { (IncomeTable.id eq id) and (IncomeTable.userId eq userId) }
+        IncomeTable.selectAll().where { (IncomeTable.id eq id) and (IncomeTable.userId eq userId) }
             .singleOrNull() ?: throw ApiException.notFound("Income record not found")
         IncomeTable.update({ (IncomeTable.id eq id) and (IncomeTable.userId eq userId) }) {
             req.source?.let { v -> it[source] = v.trim() }
@@ -65,7 +65,7 @@ class IncomeRepository {
             req.date?.let { v -> it[date] = LocalDate.parse(v) }
             req.notes?.let { v -> it[notes] = v }
         }
-        IncomeTable.select { IncomeTable.id eq id }.single().toDto()
+        IncomeTable.selectAll().where { IncomeTable.id eq id }.single().toDto()
     }
 
     fun delete(id: UUID, userId: UUID) = transaction {
@@ -74,7 +74,7 @@ class IncomeRepository {
     }
 
     fun findForSearch(userId: UUID, query: String): List<IncomeDto> = transaction {
-        IncomeTable.select { (IncomeTable.userId eq userId) and (IncomeTable.source like "%$query%") }
+        IncomeTable.selectAll().where { (IncomeTable.userId eq userId) and (IncomeTable.source like "%$query%") }
             .orderBy(IncomeTable.date, SortOrder.DESC).limit(20).map { it.toDto() }
     }
 
@@ -89,3 +89,4 @@ class IncomeRepository {
 }
 
 private val IncomeTable = com.stor.income.models.IncomeTable
+

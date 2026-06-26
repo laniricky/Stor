@@ -21,7 +21,7 @@ class ExpenseRepository {
         page: Int = 1,
         pageSize: Int = 50
     ): Pair<List<ExpenseDto>, Int> = transaction {
-        var query = ExpensesTable.select { ExpensesTable.userId eq userId }
+        var query = ExpensesTable.selectAll().where { ExpensesTable.userId eq userId }
 
         if (!category.isNullOrBlank()) {
             query = query.andWhere { ExpensesTable.category eq category }
@@ -52,7 +52,7 @@ class ExpenseRepository {
     }
 
     fun findById(id: UUID, userId: UUID): ExpenseDto = transaction {
-        ExpensesTable.select { (ExpensesTable.id eq id) and (ExpensesTable.userId eq userId) }
+        ExpensesTable.selectAll().where { (ExpensesTable.id eq id) and (ExpensesTable.userId eq userId) }
             .singleOrNull()
             ?.toExpenseDto()
             ?: throw ApiException.notFound("Expense not found")
@@ -63,7 +63,7 @@ class ExpenseRepository {
         val end = start.plusMonths(1).minusDays(1)
         ExpensesTable
             .slice(ExpensesTable.amount.sum())
-            .select {
+            .selectAll().where {
                 (ExpensesTable.userId eq userId) and
                 ExpensesTable.date.between(start, end)
             }
@@ -85,12 +85,12 @@ class ExpenseRepository {
             it[notes] = req.notes?.trim()
         }
         val newId = insertStatement[ExpensesTable.id]
-        ExpensesTable.select { ExpensesTable.id eq newId }
+        ExpensesTable.selectAll().where { ExpensesTable.id eq newId }
             .single().toExpenseDto()
     }
 
     fun update(id: UUID, userId: UUID, req: UpdateExpenseRequest): ExpenseDto = transaction {
-        val existing = ExpensesTable.select { (ExpensesTable.id eq id) and (ExpensesTable.userId eq userId) }
+        val existing = ExpensesTable.selectAll().where { (ExpensesTable.id eq id) and (ExpensesTable.userId eq userId) }
             .singleOrNull() ?: throw ApiException.notFound("Expense not found")
 
         ExpensesTable.update({ (ExpensesTable.id eq id) and (ExpensesTable.userId eq userId) }) {
@@ -103,7 +103,7 @@ class ExpenseRepository {
             req.notes?.let { v -> it[notes] = v.trim() }
         }
 
-        ExpensesTable.select { ExpensesTable.id eq id }.single().toExpenseDto()
+        ExpensesTable.selectAll().where { ExpensesTable.id eq id }.single().toExpenseDto()
     }
 
     fun delete(id: UUID, userId: UUID) = transaction {
@@ -118,7 +118,7 @@ class ExpenseRepository {
         val end = start.plusMonths(1).minusDays(1)
         ExpensesTable
             .slice(ExpensesTable.category, ExpensesTable.amount.sum())
-            .select {
+            .selectAll().where {
                 (ExpensesTable.userId eq userId) and
                 ExpensesTable.date.between(start, end)
             }
@@ -129,7 +129,7 @@ class ExpenseRepository {
     }
 
     fun findForSearch(userId: UUID, query: String): List<ExpenseDto> = transaction {
-        ExpensesTable.select {
+        ExpensesTable.selectAll().where {
             (ExpensesTable.userId eq userId) and
             ((ExpensesTable.title like "%$query%") or (ExpensesTable.category like "%$query%"))
         }
@@ -160,3 +160,4 @@ class ExpenseRepository {
 }
 
 private val ExpensesTable = com.stor.expenses.models.ExpensesTable
+

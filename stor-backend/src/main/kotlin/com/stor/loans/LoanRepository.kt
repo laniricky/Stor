@@ -12,7 +12,7 @@ import java.util.UUID
 class LoanRepository {
 
     fun findAll(userId: UUID, status: String? = null): LoanListResponse = transaction {
-        var query = LoansTable.select { LoansTable.userId eq userId }
+        var query = LoansTable.selectAll().where { LoansTable.userId eq userId }
         if (status != null) query = query.andWhere { LoansTable.status eq status }
 
         val loans = query.orderBy(LoansTable.createdAt, SortOrder.DESC).map { it.toDto() }
@@ -23,7 +23,7 @@ class LoanRepository {
     }
 
     fun findById(id: UUID, userId: UUID): LoanDto = transaction {
-        LoansTable.select { (LoansTable.id eq id) and (LoansTable.userId eq userId) }
+        LoansTable.selectAll().where { (LoansTable.id eq id) and (LoansTable.userId eq userId) }
             .singleOrNull()?.toDto() ?: throw ApiException.notFound("Loan not found")
     }
 
@@ -41,11 +41,11 @@ class LoanRepository {
             it[endDate] = req.endDate?.let { v -> LocalDate.parse(v) }
         }
         val newId = insertStatement[LoansTable.id]
-        LoansTable.select { LoansTable.id eq newId }.single().toDto()
+        LoansTable.selectAll().where { LoansTable.id eq newId }.single().toDto()
     }
 
     fun update(id: UUID, userId: UUID, req: UpdateLoanRequest): LoanDto = transaction {
-        LoansTable.select { (LoansTable.id eq id) and (LoansTable.userId eq userId) }
+        LoansTable.selectAll().where { (LoansTable.id eq id) and (LoansTable.userId eq userId) }
             .singleOrNull() ?: throw ApiException.notFound("Loan not found")
         LoansTable.update({ (LoansTable.id eq id) and (LoansTable.userId eq userId) }) {
             req.name?.let { v -> it[name] = v.trim() }
@@ -56,7 +56,7 @@ class LoanRepository {
             req.endDate?.let { v -> it[endDate] = LocalDate.parse(v) }
             req.status?.let { v -> it[status] = v }
         }
-        LoansTable.select { LoansTable.id eq id }.single().toDto()
+        LoansTable.selectAll().where { LoansTable.id eq id }.single().toDto()
     }
 
     fun delete(id: UUID, userId: UUID) = transaction {
@@ -71,7 +71,7 @@ class LoanRepository {
             }
         }
         // Auto-archive if balance reaches zero
-        val loan = LoansTable.select { LoansTable.id eq loanId }.single()
+        val loan = LoansTable.selectAll().where { LoansTable.id eq loanId }.single()
         if (loan[LoansTable.remainingBalance] <= BigDecimal.ZERO) {
             LoansTable.update({ LoansTable.id eq loanId }) {
                 it[remainingBalance] = BigDecimal.ZERO
@@ -81,14 +81,14 @@ class LoanRepository {
     }
 
     fun findForSearch(userId: UUID, query: String): List<LoanDto> = transaction {
-        LoansTable.select { (LoansTable.userId eq userId) and (LoansTable.name like "%$query%") }
+        LoansTable.selectAll().where { (LoansTable.userId eq userId) and (LoansTable.name like "%$query%") }
             .map { it.toDto() }
     }
 
     fun upcomingPayments(userId: UUID): List<LoanDto> = transaction {
         val today = LocalDate.now()
         val nextWeek = today.plusDays(7)
-        LoansTable.select {
+        LoansTable.selectAll().where {
             (LoansTable.userId eq userId) and
             (LoansTable.status eq "active") and
             (LoansTable.dueDay.isNotNull())
@@ -125,3 +125,4 @@ class LoanRepository {
 }
 
 private val LoansTable = com.stor.loans.models.LoansTable
+

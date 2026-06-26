@@ -14,10 +14,10 @@ class RepaymentRepository(private val loanRepo: LoanRepository = LoanRepository(
 
     fun findByLoan(loanId: UUID, userId: UUID): RepaymentListResponse = transaction {
         // Verify loan belongs to user
-        val loan = LoansTable.select { (LoansTable.id eq loanId) and (LoansTable.userId eq userId) }
+        val loan = LoansTable.selectAll().where { (LoansTable.id eq loanId) and (LoansTable.userId eq userId) }
             .singleOrNull() ?: throw ApiException.notFound("Loan not found")
 
-        val repayments = RepaymentsTable.select { RepaymentsTable.loanId eq loanId }
+        val repayments = RepaymentsTable.selectAll().where { RepaymentsTable.loanId eq loanId }
             .orderBy(RepaymentsTable.date, SortOrder.DESC)
             .map { it.toDto() }
 
@@ -30,7 +30,7 @@ class RepaymentRepository(private val loanRepo: LoanRepository = LoanRepository(
 
     fun create(loanId: UUID, userId: UUID, req: CreateRepaymentRequest): RepaymentDto = transaction {
         // Verify loan belongs to user and is active
-        val loan = LoansTable.select { (LoansTable.id eq loanId) and (LoansTable.userId eq userId) }
+        val loan = LoansTable.selectAll().where { (LoansTable.id eq loanId) and (LoansTable.userId eq userId) }
             .singleOrNull() ?: throw ApiException.notFound("Loan not found")
 
         if (loan[LoansTable.status] == "archived") {
@@ -49,13 +49,13 @@ class RepaymentRepository(private val loanRepo: LoanRepository = LoanRepository(
         // Reduce loan balance
         loanRepo.reduceBalance(loanId, payAmount)
 
-        RepaymentsTable.select { RepaymentsTable.id eq newId }.single().toDto()
+        RepaymentsTable.selectAll().where { RepaymentsTable.id eq newId }.single().toDto()
     }
 
     fun findForSearch(userId: UUID, query: String): List<RepaymentDto> = transaction {
         // Join repayments with loans to scope by userId
         (RepaymentsTable innerJoin LoansTable)
-            .select {
+            .selectAll().where {
                 (LoansTable.userId eq userId) and
                 (RepaymentsTable.notes like "%$query%")
             }
@@ -76,3 +76,4 @@ class RepaymentRepository(private val loanRepo: LoanRepository = LoanRepository(
 
 private val RepaymentsTable = com.stor.repayments.models.RepaymentsTable
 private val LoansTable = com.stor.loans.models.LoansTable
+

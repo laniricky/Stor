@@ -32,7 +32,7 @@ class AuthService(
         if (request.password.length < 8) throw ApiException.badRequest("Password must be at least 8 characters")
 
         return transaction {
-            val exists = UsersTable.select { UsersTable.email eq request.email.lowercase() }.count() > 0
+            val exists = UsersTable.selectAll().where { UsersTable.email eq request.email.lowercase() }.count() > 0
             if (exists) throw ApiException.conflict("Email already registered")
 
             val insertStatement = UsersTable.insert {
@@ -48,7 +48,7 @@ class AuthService(
 
     fun login(request: LoginRequest): AuthResponse {
         return transaction {
-            val user = UsersTable.select { UsersTable.email eq request.email.lowercase() }
+            val user = UsersTable.selectAll().where { UsersTable.email eq request.email.lowercase() }
                 .singleOrNull() ?: throw ApiException.unauthorized("Invalid email or password")
 
             if (!BCrypt.checkpw(request.password, user[UsersTable.passwordHash])) {
@@ -62,7 +62,7 @@ class AuthService(
     fun refreshToken(request: RefreshTokenRequest): TokenResponse {
         return transaction {
             val now = Instant.now()
-            val tokenRow = RefreshTokensTable.select { RefreshTokensTable.token eq request.refreshToken }
+            val tokenRow = RefreshTokensTable.selectAll().where { RefreshTokensTable.token eq request.refreshToken }
                 .singleOrNull() ?: throw ApiException.unauthorized("Invalid refresh token")
 
             if (tokenRow[RefreshTokensTable.expiresAt].isBefore(now)) {
@@ -71,7 +71,7 @@ class AuthService(
             }
 
             val userId = tokenRow[RefreshTokensTable.userId]
-            val user = UsersTable.select { UsersTable.id eq userId }
+            val user = UsersTable.selectAll().where { UsersTable.id eq userId }
                 .singleOrNull() ?: throw ApiException.unauthorized("User not found")
 
             // Rotate refresh token
@@ -90,7 +90,7 @@ class AuthService(
         val resetToken = UUID.randomUUID().toString().replace("-", "")
         
         transaction {
-            val user = UsersTable.select { UsersTable.email eq email }
+            val user = UsersTable.selectAll().where { UsersTable.email eq email }
                 .singleOrNull() ?: return@transaction // Silent fail to prevent user enumeration
 
             PasswordResetTokensTable.insert {
@@ -169,3 +169,4 @@ class AuthService(
 private val UsersTable = com.stor.auth.models.UsersTable
 private val RefreshTokensTable = com.stor.auth.models.RefreshTokensTable
 private val PasswordResetTokensTable = com.stor.auth.models.PasswordResetTokensTable
+
