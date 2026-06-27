@@ -48,7 +48,7 @@ class IncomeRepository {
     fun create(userId: UUID, req: CreateIncomeRequest): IncomeDto = transaction {
         val insertStatement = IncomeTable.insert {
             it[this.userId] = userId
-            it[source] = req.source.trim()
+            it[incomeSource] = req.source.trim()
             it[amount] = BigDecimal.valueOf(req.amount)
             it[date] = LocalDate.parse(req.date)
             it[notes] = req.notes?.trim()
@@ -62,7 +62,7 @@ class IncomeRepository {
             .where { (IncomeTable.id eq id) and (IncomeTable.userId eq userId) }
             .singleOrNull() ?: throw ApiException.notFound("Income record not found")
         IncomeTable.update({ (IncomeTable.id eq id) and (IncomeTable.userId eq userId) }) {
-            req.source?.let { v -> it[source] = v.trim() }
+            req.source?.let { v -> it[incomeSource] = v.trim() }
             req.amount?.let { v -> it[amount] = BigDecimal.valueOf(v) }
             req.date?.let { v -> it[date] = LocalDate.parse(v) }
             req.notes?.let { v -> it[notes] = v }
@@ -77,13 +77,13 @@ class IncomeRepository {
 
     fun findForSearch(userId: UUID, query: String): List<IncomeDto> = transaction {
         IncomeTable.selectAll()
-            .where { (IncomeTable.userId eq userId) and (IncomeTable.source like "%$query%") }
+            .where { (IncomeTable.userId eq userId) and (IncomeTable.incomeSource like "%$query%") }
             .orderBy(IncomeTable.date, SortOrder.DESC).limit(20).map { it.toDto() }
     }
 
     private fun ResultRow.toDto() = IncomeDto(
         id = this[IncomeTable.id].toString(),
-        source = this[IncomeTable.source],
+        source = this[IncomeTable.incomeSource],
         amount = this[IncomeTable.amount].toDouble(),
         date = this[IncomeTable.date].toString(),
         notes = this[IncomeTable.notes],
@@ -92,3 +92,4 @@ class IncomeRepository {
 }
 
 private val IncomeTable = com.stor.income.models.IncomeTable
+

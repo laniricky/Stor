@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.javatime.timestamp
 object IncomeTable : Table("income") {
     val id = uuid("id").autoGenerate()
     val userId = uuid("user_id").references(UsersTable.id)
-    val source = varchar("source", 255)
+    val incomeSource = varchar("source", 255)
     val amount = decimal("amount", 12, 2)
     val date = date("date")
     val notes = text("notes").nullable()

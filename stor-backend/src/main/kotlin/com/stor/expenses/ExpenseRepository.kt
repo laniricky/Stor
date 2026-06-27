@@ -42,7 +42,7 @@ class ExpenseRepository {
         val total = query.count().toInt()
         val expenses = query
             .orderBy(ExpensesTable.date, SortOrder.DESC)
-            .limit(pageSize, ((page - 1) * pageSize).toLong())
+            .limit(pageSize).offset(((page - 1) * pageSize).toLong())
             .map { it.toExpenseDto() }
 
         Pair(expenses, total)

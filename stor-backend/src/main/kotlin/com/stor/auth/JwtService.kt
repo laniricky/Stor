@@ -5,7 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.application.*
 import java.util.*
 
-class JwtService(application: Application) {
+class JwtService(private val application: Application) {
 
     private val secret = application.environment.config.propertyOrNull("jwt.secret")?.getString()
         ?: System.getenv("JWT_SECRET")
