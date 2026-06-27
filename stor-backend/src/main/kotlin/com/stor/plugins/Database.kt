@@ -14,9 +14,17 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Application.configureDatabase() {
-    val jdbcUrl = environment.config.propertyOrNull("database.jdbcUrl")?.getString()
+    val rawUrl = environment.config.propertyOrNull("database.jdbcUrl")?.getString()
         ?: System.getenv("DATABASE_URL")
         ?: throw IllegalStateException("DATABASE_URL is not configured")
+
+    // Neon/Postgres URLs may come as postgresql:// — JDBC driver requires jdbc:postgresql://
+    val jdbcUrl = when {
+        rawUrl.startsWith("jdbc:") -> rawUrl
+        rawUrl.startsWith("postgresql://") -> "jdbc:${rawUrl}"
+        rawUrl.startsWith("postgres://") -> "jdbc:postgresql://${rawUrl.removePrefix("postgres://")}"
+        else -> rawUrl
+    }
 
     val hikariConfig = HikariConfig().apply {
         this.jdbcUrl = jdbcUrl
