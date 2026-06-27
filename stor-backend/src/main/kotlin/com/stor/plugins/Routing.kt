@@ -15,6 +15,14 @@ import io.ktor.server.routing.*
 
 fun Application.configureRouting() {
     routing {
+        get("/") {
+            call.respond(mapOf(
+                "app" to "Stor API",
+                "message" to "Welcome to the Stor backend!",
+                "docs" to "Append /api/v1 to use endpoints"
+            ))
+        }
+
         get("/health") {
             call.respond(mapOf("status" to "ok", "version" to "1.0.0"))
         }
