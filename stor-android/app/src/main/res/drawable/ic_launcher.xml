@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Outer Box -->
+    <path
+        android:fillColor="#ffffff"
+        android:strokeColor="#14B8A6"
+        android:strokeWidth="16"
+        android:pathData="M128,32h256a96,96 0 0 1 96,96v256a96,96 0 0 1 -96,96h-256a96,96 0 0 1 -96,-96v-256a96,96 0 0 1 96,-96z" />
+
+    <!-- Center Squiggle -->
+    <path
+        android:strokeColor="#14B8A6"
+        android:strokeWidth="28"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M336 156 C336 116 304 88 256 88 C208 88 176 116 176 156 C176 196 208 216 256 216 C304 216 336 236 336 276 C336 316 304 344 256 344 C208 344 176 316 176 276" />
+
+    <!-- Top Left Line -->
+    <path
+        android:strokeColor="#14B8A6"
+        android:strokeWidth="28"
+        android:strokeLineCap="round"
+        android:pathData="M150 156 L190 156" />
+
+    <!-- Bottom Right Line -->
+    <path
+        android:strokeColor="#14B8A6"
+        android:strokeWidth="28"
+        android:strokeLineCap="round"
+        android:pathData="M322 344 L362 344" />
+
+    <!-- Top Right Circle -->
+    <path
+        android:fillColor="#84CC16"
+        android:pathData="M380,96a24,24 0 1,0 0,48a24,24 0 1,0 0,-48z" />
+
+    <!-- Bottom Left Circle -->
+    <path
+        android:fillColor="#84CC16"
+        android:pathData="M132,368a24,24 0 1,0 0,48a24,24 0 1,0 0,-48z" />
+
+</vector>

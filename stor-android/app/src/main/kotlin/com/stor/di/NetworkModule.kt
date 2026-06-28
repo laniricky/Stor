@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.stor.data.preferences.AuthPreferences
+import com.stor.data.remote.api.StorApi
 import com.stor.data.remote.interceptors.AuthInterceptor
 import dagger.Module
 import dagger.Provides
@@ -12,9 +13,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
-import okhttp.MediaType.Companion.toMediaType
-import okhttp.OkHttpClient
-import okhttp.logging.HttpLoggingInterceptor
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
@@ -25,6 +26,8 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "st
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    private const val BASE_URL = "https://stor-8r4z.onrender.com/api/v1/"
 
     @Provides
     @Singleton
@@ -61,14 +64,15 @@ object NetworkModule {
             ignoreUnknownKeys = true
             coerceInputValues = true
         }
-        
-        // TODO: Move BASE_URL to BuildConfig
-        val baseUrl = "http://10.0.2.2:8080/api/v1/"
-        
+
         return Retrofit.Builder()
-            .baseUrl(baseUrl)
+            .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
     }
+
+    @Provides
+    @Singleton
+    fun provideStorApi(retrofit: Retrofit): StorApi = retrofit.create(StorApi::class.java)
 }

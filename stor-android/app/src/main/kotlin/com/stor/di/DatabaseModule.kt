@@ -3,6 +3,10 @@ package com.stor.di
 import android.content.Context
 import androidx.room.Room
 import com.stor.data.local.StorDatabase
+import com.stor.data.local.dao.ExpenseDao
+import com.stor.data.local.dao.IncomeDao
+import com.stor.data.local.dao.LoanDao
+import com.stor.data.local.dao.RepaymentDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,4 +27,16 @@ object DatabaseModule {
             "stor_database"
         ).build()
     }
+
+    @Provides
+    fun provideExpenseDao(db: StorDatabase): ExpenseDao = db.expenseDao()
+
+    @Provides
+    fun provideIncomeDao(db: StorDatabase): IncomeDao = db.incomeDao()
+
+    @Provides
+    fun provideLoanDao(db: StorDatabase): LoanDao = db.loanDao()
+
+    @Provides
+    fun provideRepaymentDao(db: StorDatabase): RepaymentDao = db.repaymentDao()
 }

@@ -15,4 +15,9 @@ class StorApp : Application(), Configuration.Provider {
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
+
+    override fun onCreate() {
+        super.onCreate()
+        androidx.work.WorkManager.initialize(this, workManagerConfiguration)
+    }
 }

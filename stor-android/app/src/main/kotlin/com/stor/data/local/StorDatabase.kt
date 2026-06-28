@@ -2,6 +2,10 @@ package com.stor.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.stor.data.local.dao.ExpenseDao
+import com.stor.data.local.dao.IncomeDao
+import com.stor.data.local.dao.LoanDao
+import com.stor.data.local.dao.RepaymentDao
 import com.stor.data.local.entities.ExpenseEntity
 import com.stor.data.local.entities.IncomeEntity
 import com.stor.data.local.entities.LoanEntity
@@ -18,8 +22,8 @@ import com.stor.data.local.entities.RepaymentEntity
     exportSchema = false
 )
 abstract class StorDatabase : RoomDatabase() {
-    // abstract fun expenseDao(): ExpenseDao
-    // abstract fun incomeDao(): IncomeDao
-    // abstract fun loanDao(): LoanDao
-    // abstract fun repaymentDao(): RepaymentDao
+    abstract fun expenseDao(): ExpenseDao
+    abstract fun incomeDao(): IncomeDao
+    abstract fun loanDao(): LoanDao
+    abstract fun repaymentDao(): RepaymentDao
 }

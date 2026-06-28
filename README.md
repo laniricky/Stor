@@ -1,4 +1,4 @@
-# Stor - Expense & Loan Tracker
+devices# Stor - Expense & Loan Tracker
 
 This project is a complete production-ready backend and the scaffolded architecture for the Stor Android app.
 

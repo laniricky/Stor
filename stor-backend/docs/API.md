@@ -19,8 +19,8 @@ Creates a new user.
 **Response (201 Created):**
 ```json
 {
-  "accessToken": "ey...",
-  "refreshToken": "uuid-string",
+  "access_token": "ey...",
+  "refresh_token": "uuid-string",
   "user": {
     "id": "uuid-string",
     "name": "John Doe",
@@ -43,14 +43,14 @@ Creates a new user.
 **Request Body:**
 ```json
 {
-  "refreshToken": "uuid-string"
+  "refresh_token": "uuid-string"
 }
 ```
 **Response (200 OK):**
 ```json
 {
-  "accessToken": "ey...",
-  "refreshToken": "new-uuid-string"
+  "access_token": "ey...",
+  "refresh_token": "new-uuid-string"
 }
 ```
 
@@ -64,7 +64,7 @@ Query Params: `?category=Food&month=5&year=2024&search=lunch&page=1&pageSize=50`
   "title": "Lunch",
   "amount": 450.0,
   "category": "Food",
-  "paymentMethod": "Cash",
+  "payment_method": "Cash",
   "date": "2024-05-21",
   "notes": "Optional"
 }
@@ -92,11 +92,11 @@ Query Params: `?status=active` (active or archived)
 {
   "name": "Car Loan",
   "lender": "Bank",
-  "originalAmount": 150000.0,
-  "interestRate": 12.0,
-  "monthlyPayment": 12500.0,
-  "dueDay": 5,
-  "startDate": "2024-01-05"
+  "original_amount": 150000.0,
+  "interest_rate": 12.0,
+  "monthly_payment": 12500.0,
+  "due_day": 5,
+  "start_date": "2024-01-05"
 }
 ```
 
@@ -106,7 +106,7 @@ Query Params: `?status=active` (active or archived)
 **Request Body:**
 ```json
 {
-  "amountPaid": 12500.0,
+  "amount_paid": 12500.0,
   "date": "2024-05-05"
 }
 ```
@@ -127,3 +127,4 @@ Query Params: `?month=5&year=2024`
 ### GET `/search`
 Query Params: `?q=lunch&type=expense`
 Type can be `expense`, `income`, `loan`, `repayment`, or left out for global search.
+
