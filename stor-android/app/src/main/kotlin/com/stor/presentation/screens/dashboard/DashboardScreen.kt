@@ -50,6 +50,10 @@ fun DashboardScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.load()
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()

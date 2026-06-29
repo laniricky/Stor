@@ -63,6 +63,10 @@ fun ExpensesScreen(
     val state by viewModel.state.collectAsState()
     var showSearch by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        viewModel.sync()
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {

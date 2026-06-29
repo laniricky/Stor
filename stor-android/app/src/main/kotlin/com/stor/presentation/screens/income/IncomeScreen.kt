@@ -34,6 +34,10 @@ fun IncomeScreen(
     val totalMonthly = state.income.sumOf { it.amount }
     val totalAnnual = totalMonthly * 12
 
+    LaunchedEffect(Unit) {
+        viewModel.sync()
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {

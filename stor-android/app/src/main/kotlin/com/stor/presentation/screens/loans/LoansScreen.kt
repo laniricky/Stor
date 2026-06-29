@@ -34,6 +34,10 @@ fun LoansScreen(
     val state by viewModel.state.collectAsState()
     val totalDebt = state.loans.filter { loan -> loan.status == "active" }.sumOf { loan -> loan.remainingBalance }
 
+    LaunchedEffect(Unit) {
+        viewModel.sync()
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
