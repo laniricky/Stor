@@ -4,6 +4,7 @@ import com.stor.data.local.dao.IncomeDao
 import com.stor.data.local.entities.IncomeEntity
 import com.stor.data.remote.api.StorApi
 import com.stor.data.remote.dto.CreateIncomeRequest
+import com.stor.data.remote.api.getErrorMessage
 import com.stor.domain.model.Income
 import com.stor.domain.repository.IncomeRepository
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,7 @@ class IncomeRepositoryImpl @Inject constructor(
         val response = api.createIncome(
             CreateIncomeRequest(source = income.source, amount = income.amount, date = income.date, notes = income.notes)
         )
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val body = response.body() ?: error("Empty response")
         dao.insertIncome(body.toEntity())
         body.toDomain()
@@ -37,18 +39,21 @@ class IncomeRepositoryImpl @Inject constructor(
             income.id,
             CreateIncomeRequest(source = income.source, amount = income.amount, date = income.date, notes = income.notes)
         )
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val body = response.body() ?: error("Empty response")
         dao.insertIncome(body.toEntity())
         body.toDomain()
     }
 
     override suspend fun deleteIncome(id: String): Result<Unit> = runCatching {
-        api.deleteIncome(id)
+        val response = api.deleteIncome(id)
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         dao.deleteIncomeById(id)
     }
 
     override suspend fun syncIncome(): Result<Unit> = runCatching {
         val response = api.getIncome()
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val items = response.body() ?: error("Sync failed")
         dao.clearAll()
         dao.insertIncomes(items.map { it.toEntity() })

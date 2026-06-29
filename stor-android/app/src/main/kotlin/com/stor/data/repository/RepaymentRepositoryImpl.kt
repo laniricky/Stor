@@ -4,6 +4,7 @@ import com.stor.data.local.dao.RepaymentDao
 import com.stor.data.local.entities.RepaymentEntity
 import com.stor.data.remote.api.StorApi
 import com.stor.data.remote.dto.CreateRepaymentRequest
+import com.stor.data.remote.api.getErrorMessage
 import com.stor.domain.model.Repayment
 import com.stor.domain.repository.RepaymentRepository
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +26,7 @@ class RepaymentRepositoryImpl @Inject constructor(
             loanId,
             CreateRepaymentRequest(amountPaid = repayment.amountPaid, date = repayment.date, notes = repayment.notes)
         )
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val body = response.body() ?: error("Empty response")
         dao.insertRepayment(body.toEntity())
         body.toDomain()
@@ -32,6 +34,7 @@ class RepaymentRepositoryImpl @Inject constructor(
 
     override suspend fun syncRepayments(loanId: String): Result<Unit> = runCatching {
         val response = api.getRepayments(loanId)
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val repayments = response.body() ?: error("Sync failed")
         dao.insertRepayments(repayments.map { it.toEntity() })
     }

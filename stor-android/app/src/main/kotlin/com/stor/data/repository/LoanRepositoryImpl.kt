@@ -4,6 +4,7 @@ import com.stor.data.local.dao.LoanDao
 import com.stor.data.local.entities.LoanEntity
 import com.stor.data.remote.api.StorApi
 import com.stor.data.remote.dto.CreateLoanRequest
+import com.stor.data.remote.api.getErrorMessage
 import com.stor.domain.model.Loan
 import com.stor.domain.repository.LoanRepository
 import kotlinx.coroutines.flow.Flow
@@ -34,6 +35,7 @@ class LoanRepositoryImpl @Inject constructor(
                 dueDay = loan.dueDay, startDate = loan.startDate, endDate = loan.endDate
             )
         )
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val body = response.body() ?: error("Empty response")
         dao.insertLoan(body.toEntity())
         body.toDomain()
@@ -49,18 +51,21 @@ class LoanRepositoryImpl @Inject constructor(
                 dueDay = loan.dueDay, startDate = loan.startDate, endDate = loan.endDate
             )
         )
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val body = response.body() ?: error("Empty response")
         dao.insertLoan(body.toEntity())
         body.toDomain()
     }
 
     override suspend fun deleteLoan(id: String): Result<Unit> = runCatching {
-        api.deleteLoan(id)
+        val response = api.deleteLoan(id)
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         dao.deleteLoanById(id)
     }
 
     override suspend fun syncLoans(): Result<Unit> = runCatching {
         val response = api.getLoans()
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val loans = response.body() ?: error("Sync failed")
         dao.clearAll()
         dao.insertLoans(loans.map { it.toEntity() })

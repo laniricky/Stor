@@ -31,8 +31,8 @@ import androidx.navigation.NavController
 import com.stor.presentation.theme.*
 
 private val categories = listOf(
-    "Food", "Transport", "Rent", "Utilities",
-    "Shopping", "Entertainment", "Health", "Education", "Other"
+    "Food", "Transport", "Rent", "Utilities", "Shopping",
+    "Entertainment", "Health", "Education", "Other"
 )
 
 private val paymentMethods = listOf("Cash", "M-Pesa", "Card", "Bank Transfer", "Other")

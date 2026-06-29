@@ -4,6 +4,7 @@ import com.stor.data.local.dao.ExpenseDao
 import com.stor.data.local.entities.ExpenseEntity
 import com.stor.data.remote.api.StorApi
 import com.stor.data.remote.dto.CreateExpenseRequest
+import com.stor.data.remote.api.getErrorMessage
 import com.stor.domain.model.Expense
 import com.stor.domain.repository.ExpenseRepository
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +36,7 @@ class ExpenseRepositoryImpl @Inject constructor(
                 notes = expense.notes
             )
         )
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val body = response.body() ?: error("Empty response")
         dao.insertExpense(body.toEntity())
         body.toDomain()
@@ -53,18 +55,21 @@ class ExpenseRepositoryImpl @Inject constructor(
                 notes = expense.notes
             )
         )
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val body = response.body() ?: error("Empty response")
         dao.insertExpense(body.toEntity())
         body.toDomain()
     }
 
     override suspend fun deleteExpense(id: String): Result<Unit> = runCatching {
-        api.deleteExpense(id)
+        val response = api.deleteExpense(id)
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         dao.deleteExpenseById(id)
     }
 
     override suspend fun syncExpenses(): Result<Unit> = runCatching {
         val response = api.getExpenses()
+        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val expenses = response.body() ?: error("Sync failed")
         dao.clearAll()
         dao.insertExpenses(expenses.map { it.toEntity() })
