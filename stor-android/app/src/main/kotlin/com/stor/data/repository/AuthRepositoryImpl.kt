@@ -25,6 +25,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
         val body = response.body() ?: error("Empty response body")
         prefs.saveTokens(body.accessToken, body.refreshToken)
+        prefs.saveUser(body.user.id, body.user.name, body.user.email)
     }
 
     override suspend fun register(name: String, email: String, password: String): Result<Unit> = runCatching {
@@ -34,6 +35,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
         val body = response.body() ?: error("Empty response body")
         prefs.saveTokens(body.accessToken, body.refreshToken)
+        prefs.saveUser(body.user.id, body.user.name, body.user.email)
     }
 
     override suspend fun logout() = prefs.clearTokens()

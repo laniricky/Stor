@@ -119,7 +119,14 @@ fun StorNavGraph(
                     LoansScreen(navController = navController)
                 }
                 composable(Screen.More.route) {
-                    MoreScreen()
+                    MoreScreen(
+                        onNavigate = { route -> navController.navigate(route) },
+                        onLogoutComplete = {
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
                 }
                 composable(Screen.AddExpense.route) {
                     AddExpenseScreen(navController = navController)
@@ -129,6 +136,21 @@ fun StorNavGraph(
                 }
                 composable(Screen.AddLoan.route) {
                     AddLoanScreen(navController = navController)
+                }
+                composable(Screen.EditProfile.route) {
+                    com.stor.presentation.screens.more.profile.EditProfileScreen(navController = navController)
+                }
+                composable(Screen.ChangePassword.route) {
+                    com.stor.presentation.screens.more.profile.ChangePasswordScreen(navController = navController)
+                }
+                composable(Screen.BudgetSettings.route) {
+                    com.stor.presentation.screens.more.budget.BudgetSettingsScreen(navController = navController)
+                }
+                composable(Screen.NotificationSettings.route) {
+                    com.stor.presentation.screens.more.notifications.NotificationSettingsScreen(navController = navController)
+                }
+                composable(Screen.ExportReports.route) {
+                    com.stor.presentation.screens.more.export.ExportReportsScreen(navController = navController)
                 }
             }
         }

@@ -22,70 +22,114 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.stor.presentation.theme.*
 
 @Composable
-fun MoreScreen(viewModel: MoreViewModel = hiltViewModel()) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
-    ) {
-        // Profile Header
-        Box(
+fun MoreScreen(
+    viewModel: MoreViewModel = hiltViewModel(),
+    onNavigate: (String) -> Unit = {},
+    onLogoutComplete: () -> Unit = {}
+) {
+    val userProfile by viewModel.userProfile.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.logoutComplete.collect {
+            onLogoutComplete()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.syncState.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { padding ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(TealPrimary.copy(alpha = 0.15f), Color.Transparent)))
-                .padding(horizontal = 20.dp, vertical = 28.dp)
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(64.dp).clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(TealPrimary, LimeSecondary))),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("S", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = BackgroundDark)
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Text("My Account", fontSize = 20.sp, fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground)
-                    Text("Manage your preferences", fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+            // Profile Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(TealPrimary.copy(alpha = 0.15f), Color.Transparent)))
+                    .padding(horizontal = 20.dp, vertical = 28.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.size(64.dp).clip(CircleShape)
+                            .background(Brush.linearGradient(listOf(TealPrimary, LimeSecondary))),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(userProfile.initials, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = BackgroundDark)
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(userProfile.name, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground)
+                        Text(userProfile.email, fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            SettingsSection("Finance") {
+                SettingsItem(Icons.Default.List, "Manage Categories", TealPrimary) {
+                    // Navigate to categories (low priority)
+                }
+                SettingsItem(Icons.Default.Savings, "Budget Settings", TealPrimary) {
+                    onNavigate("budget_settings")
+                }
+            }
+
+            SettingsSection("Notifications") {
+                SettingsItem(Icons.Default.Notifications, "Loan Reminders", LoanColor) {
+                    onNavigate("notification_settings")
+                }
+                SettingsItem(Icons.Default.NotificationImportant, "Budget Alerts", ExpenseColor) {
+                    onNavigate("notification_settings")
+                }
+            }
+
+            SettingsSection("Data") {
+                SettingsItem(Icons.Default.Sync, "Sync Now", IncomeColor) {
+                    viewModel.syncAll()
+                }
+                SettingsItem(Icons.Default.Save, "Backup Data", TealPrimary) {
+                    // Backup logic (TODO)
+                }
+                SettingsItem(Icons.Default.Download, "Export Reports", TealPrimary) {
+                    onNavigate("export_reports")
+                }
+            }
+
+            SettingsSection("Account") {
+                SettingsItem(Icons.Default.Person, "Edit Profile", TealPrimary) {
+                    onNavigate("edit_profile")
+                }
+                SettingsItem(Icons.Default.Lock, "Change Password", TealPrimary) {
+                    onNavigate("change_password")
+                }
+                SettingsItem(Icons.Default.ExitToApp, "Sign Out", ExpenseColor) {
+                    viewModel.logout()
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                "Stor v1.0.0",
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
+                textAlign = TextAlign.Center
+            )
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        SettingsSection("Finance") {
-            SettingsItem(Icons.Default.List, "Manage Categories", TealPrimary) {}
-            SettingsItem(Icons.Default.Savings, "Budget Settings", TealPrimary) {}
-        }
-
-        SettingsSection("Notifications") {
-            SettingsItem(Icons.Default.Notifications, "Loan Reminders", LoanColor) {}
-            SettingsItem(Icons.Default.NotificationImportant, "Budget Alerts", ExpenseColor) {}
-        }
-
-        SettingsSection("Data") {
-            SettingsItem(Icons.Default.Sync, "Sync Now", IncomeColor) {}
-            SettingsItem(Icons.Default.Save, "Backup Data", TealPrimary) {}
-            SettingsItem(Icons.Default.Download, "Export Reports", TealPrimary) {}
-        }
-
-        SettingsSection("Account") {
-            SettingsItem(Icons.Default.Person, "Edit Profile", TealPrimary) {}
-            SettingsItem(Icons.Default.Lock, "Change Password", TealPrimary) {}
-            SettingsItem(Icons.Default.ExitToApp, "Sign Out", ExpenseColor) { viewModel.logout() }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(
-            "Stor v1.0.0",
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
-            textAlign = TextAlign.Center
-        )
     }
 }
 

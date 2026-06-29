@@ -44,4 +44,9 @@ sealed class Screen(val route: String) {
     
     // More / Settings
     object More : Screen("more")
+    object EditProfile : Screen("edit_profile")
+    object ChangePassword : Screen("change_password")
+    object BudgetSettings : Screen("budget_settings")
+    object NotificationSettings : Screen("notification_settings")
+    object ExportReports : Screen("export_reports")
 }
