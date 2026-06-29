@@ -20,8 +20,11 @@ import com.stor.presentation.screens.auth.LoginScreen
 import com.stor.presentation.screens.auth.RegisterScreen
 import com.stor.presentation.screens.dashboard.DashboardScreen
 import com.stor.presentation.screens.expenses.ExpensesScreen
+import com.stor.presentation.screens.expenses.AddExpenseScreen
 import com.stor.presentation.screens.income.IncomeScreen
+import com.stor.presentation.screens.income.AddIncomeScreen
 import com.stor.presentation.screens.loans.LoansScreen
+import com.stor.presentation.screens.loans.AddLoanScreen
 import com.stor.presentation.screens.more.MoreScreen
 import com.stor.presentation.theme.CardBackground
 import com.stor.presentation.theme.TealPrimary
@@ -117,6 +120,15 @@ fun StorNavGraph(
                 }
                 composable(Screen.More.route) {
                     MoreScreen()
+                }
+                composable(Screen.AddExpense.route) {
+                    AddExpenseScreen(navController = navController)
+                }
+                composable(Screen.AddIncome.route) {
+                    AddIncomeScreen(navController = navController)
+                }
+                composable(Screen.AddLoan.route) {
+                    AddLoanScreen(navController = navController)
                 }
             }
         }
