@@ -3,6 +3,7 @@ package com.stor.di
 import android.content.Context
 import androidx.room.Room
 import com.stor.data.local.StorDatabase
+import com.stor.data.local.dao.DashboardCacheDao
 import com.stor.data.local.dao.ExpenseDao
 import com.stor.data.local.dao.IncomeDao
 import com.stor.data.local.dao.LoanDao
@@ -25,7 +26,9 @@ object DatabaseModule {
             context,
             StorDatabase::class.java,
             "stor_database"
-        ).build()
+        )
+            .addMigrations(StorDatabase.MIGRATION_1_2)
+            .build()
     }
 
     @Provides
@@ -39,4 +42,7 @@ object DatabaseModule {
 
     @Provides
     fun provideRepaymentDao(db: StorDatabase): RepaymentDao = db.repaymentDao()
+
+    @Provides
+    fun provideDashboardCacheDao(db: StorDatabase): DashboardCacheDao = db.dashboardCacheDao()
 }

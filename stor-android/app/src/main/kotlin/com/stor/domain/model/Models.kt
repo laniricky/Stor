@@ -10,7 +10,8 @@ data class Expense(
     val paymentMethod: String,
     val date: String,
     val notes: String?,
-    val createdAt: String
+    val createdAt: String,
+    val isSynced: Boolean = true
 )
 
 // Income domain model
@@ -20,7 +21,8 @@ data class Income(
     val amount: Double,
     val date: String,
     val notes: String?,
-    val createdAt: String
+    val createdAt: String,
+    val isSynced: Boolean = true
 )
 
 // Loan domain model
@@ -36,7 +38,8 @@ data class Loan(
     val startDate: String,
     val endDate: String?,
     val status: String,
-    val createdAt: String
+    val createdAt: String,
+    val isSynced: Boolean = true
 ) {
     val percentagePaid: Double
         get() = if (originalAmount > 0) ((originalAmount - remainingBalance) / originalAmount) * 100 else 0.0
@@ -86,7 +89,8 @@ data class Dashboard(
     val todaySpending: Double,
     val recentTransactions: List<RecentTransaction>,
     val upcomingLoanPayments: List<UpcomingPayment>,
-    val monthlyChart: List<ChartDataPoint>
+    val monthlyChart: List<ChartDataPoint>,
+    val isOffline: Boolean = false
 )
 
 

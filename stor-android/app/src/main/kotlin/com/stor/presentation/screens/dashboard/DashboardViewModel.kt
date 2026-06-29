@@ -2,7 +2,6 @@ package com.stor.presentation.screens.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.stor.domain.model.ChartDataPoint
 import com.stor.domain.model.Dashboard
 import com.stor.domain.repository.DashboardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,7 +13,8 @@ import javax.inject.Inject
 data class DashboardUiState(
     val isLoading: Boolean = false,
     val dashboard: Dashboard? = null,
-    val error: String? = null
+    val error: String? = null,
+    val isOffline: Boolean = false
 )
 
 @HiltViewModel
@@ -31,8 +31,15 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = DashboardUiState(isLoading = true)
             dashboardRepository.getDashboard()
-                .onSuccess { _state.value = DashboardUiState(dashboard = it) }
-                .onFailure { _state.value = DashboardUiState(error = it.message) }
+                .onSuccess { dashboard ->
+                    _state.value = DashboardUiState(
+                        dashboard = dashboard,
+                        isOffline = dashboard.isOffline
+                    )
+                }
+                .onFailure { err ->
+                    _state.value = DashboardUiState(error = err.message)
+                }
         }
     }
 }

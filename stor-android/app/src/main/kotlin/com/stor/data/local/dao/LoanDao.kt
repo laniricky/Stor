@@ -9,6 +9,9 @@ interface LoanDao {
     @Query("SELECT * FROM loans ORDER BY created_at DESC")
     fun getAllLoans(): Flow<List<LoanEntity>>
 
+    @Query("SELECT * FROM loans ORDER BY created_at DESC")
+    suspend fun getAllLoansList(): List<LoanEntity>
+
     @Query("SELECT * FROM loans WHERE status = 'active' ORDER BY created_at DESC")
     fun getActiveLoans(): Flow<List<LoanEntity>>
 
@@ -29,4 +32,10 @@ interface LoanDao {
     
     @Query("DELETE FROM loans")
     suspend fun clearAll()
+
+    @Query("SELECT * FROM loans WHERE is_synced = 0")
+    suspend fun getUnsynced(): List<LoanEntity>
+
+    @Query("DELETE FROM loans WHERE id = :id")
+    suspend fun hardDelete(id: String)
 }

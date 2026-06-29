@@ -9,6 +9,8 @@ import com.stor.domain.model.Income
 import com.stor.domain.repository.IncomeRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.io.IOException
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,13 +27,28 @@ class IncomeRepositoryImpl @Inject constructor(
         dao.getIncomeById(id)?.toDomain()
 
     override suspend fun createIncome(income: Income): Result<Income> = runCatching {
-        val response = api.createIncome(
-            CreateIncomeRequest(source = income.source, amount = income.amount, date = income.date, notes = income.notes)
-        )
-        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
-        val body = response.body() ?: error("Empty response")
-        dao.insertIncome(body.toEntity())
-        body.toDomain()
+        try {
+            val response = api.createIncome(
+                CreateIncomeRequest(source = income.source, amount = income.amount, date = income.date, notes = income.notes)
+            )
+            if (!response.isSuccessful) throw Exception(response.getErrorMessage())
+            val body = response.body() ?: error("Empty response")
+            dao.insertIncome(body.toEntity(isSynced = true))
+            body.toDomain()
+        } catch (e: IOException) {
+            val localId = "LOCAL_${UUID.randomUUID()}"
+            val localEntity = IncomeEntity(
+                id = localId,
+                source = income.source,
+                amount = income.amount,
+                date = income.date,
+                notes = income.notes,
+                createdAt = income.date,
+                isSynced = false
+            )
+            dao.insertIncome(localEntity)
+            localEntity.toDomain()
+        }
     }
 
     override suspend fun updateIncome(income: Income): Result<Income> = runCatching {
@@ -41,7 +58,7 @@ class IncomeRepositoryImpl @Inject constructor(
         )
         if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val body = response.body() ?: error("Empty response")
-        dao.insertIncome(body.toEntity())
+        dao.insertIncome(body.toEntity(isSynced = true))
         body.toDomain()
     }
 
@@ -52,16 +69,32 @@ class IncomeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncIncome(): Result<Unit> = runCatching {
+        // 1. Push unsynced local records first
+        val unsynced = dao.getUnsynced()
+        for (entity in unsynced) {
+            try {
+                val response = api.createIncome(
+                    CreateIncomeRequest(source = entity.source, amount = entity.amount, date = entity.date, notes = entity.notes)
+                )
+                if (response.isSuccessful) {
+                    dao.hardDelete(entity.id)
+                    response.body()?.let { dao.insertIncome(it.toEntity(isSynced = true)) }
+                }
+            } catch (_: IOException) { }
+        }
+
+        // 2. Full refresh
         val response = api.getIncome()
         if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         val items = response.body() ?: error("Sync failed")
-        dao.clearAll()
-        dao.insertIncomes(items.map { it.toEntity() })
+        val stillUnsynced = dao.getUnsynced().map { it.id }.toSet()
+        dao.getAllIncomeList().filter { it.id !in stillUnsynced }.forEach { dao.hardDelete(it.id) }
+        dao.insertIncomes(items.map { it.toEntity(isSynced = true) })
     }
 }
 
-fun IncomeEntity.toDomain() = Income(id, source, amount, date, notes, createdAt)
+fun IncomeEntity.toDomain() = Income(id, source, amount, date, notes, createdAt, isSynced)
 
-fun com.stor.data.remote.dto.IncomeDto.toDomain() = Income(id, source, amount, date, notes, createdAt)
+fun com.stor.data.remote.dto.IncomeDto.toDomain() = Income(id, source, amount, date, notes, createdAt, isSynced = true)
 
-fun com.stor.data.remote.dto.IncomeDto.toEntity() = IncomeEntity(id, source, amount, date, notes, createdAt)
+fun com.stor.data.remote.dto.IncomeDto.toEntity(isSynced: Boolean = true) = IncomeEntity(id, source, amount, date, notes, createdAt, isSynced)

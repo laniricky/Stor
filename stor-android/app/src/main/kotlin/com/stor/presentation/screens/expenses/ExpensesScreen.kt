@@ -156,6 +156,26 @@ fun ExpensesScreen(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Offline banner
+                val hasUnsynced = state.expenses.any { !it.isSynced }
+                if (hasUnsynced) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFFF59E0B).copy(alpha = 0.12f))
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.CloudUpload, contentDescription = null,
+                                tint = Color(0xFFF59E0B), modifier = Modifier.size(16.dp))
+                            Text("Some items are pending sync",
+                                fontSize = 12.sp, color = Color(0xFFF59E0B))
+                        }
+                    }
+                }
                 item {
                     val total = state.expenses.sumOf { expense -> expense.amount }
                     Card(
@@ -184,40 +204,60 @@ private fun ExpenseCard(expense: Expense, onDelete: () -> Unit) {
     val color = categoryColor(expense.category)
     val icon = categoryIcon(expense.category)
     var showConfirm by remember { mutableStateOf(false) }
+    val pendingColor = Color(0xFFF59E0B)
 
     Card(
         modifier = Modifier.fillMaxWidth().animateContentSize(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(
+            containerColor = if (!expense.isSynced) pendingColor.copy(alpha = 0.07f) else CardBackground
+        )
     ) {
+        // Amber left-border stripe for unsynced items
         Column {
-            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp))
-                        .background(color.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                if (!expense.isSynced) {
+                    Box(
+                        modifier = Modifier
+                            .width(4.dp)
+                            .heightIn(min = 80.dp)
+                            .background(pendingColor, RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+                    )
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(expense.title, fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface)
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(expense.category, fontSize = 12.sp, color = color)
-                        Text("·", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
-                        Text(expense.date, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                Row(modifier = Modifier.padding(16.dp).weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp))
+                            .background(color.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
                     }
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(formatKsh(expense.amount), fontWeight = FontWeight.Bold, color = ExpenseColor)
-                    Text(expense.paymentMethod, fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                IconButton(onClick = { showConfirm = true }, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete",
-                        tint = ExpenseColor.copy(alpha = 0.6f), modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(expense.title, fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(expense.category, fontSize = 12.sp, color = color)
+                            Text("·", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                            Text(expense.date, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                        }
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (!expense.isSynced) {
+                                Icon(Icons.Default.CloudUpload, contentDescription = "Pending sync",
+                                    tint = pendingColor, modifier = Modifier.size(14.dp))
+                            }
+                            Text(formatKsh(expense.amount), fontWeight = FontWeight.Bold, color = ExpenseColor)
+                        }
+                        Text(expense.paymentMethod, fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    IconButton(onClick = { showConfirm = true }, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete",
+                            tint = ExpenseColor.copy(alpha = 0.6f), modifier = Modifier.size(18.dp))
+                    }
                 }
             }
             if (showConfirm) {

@@ -99,6 +99,27 @@ fun IncomeScreen(
                     }
                 }
             } else {
+                // Pending sync banner
+                val hasUnsynced = state.income.any { !it.isSynced }
+                if (hasUnsynced) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(androidx.compose.ui.graphics.Color(0xFFF59E0B).copy(alpha = 0.12f))
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.CloudUpload, contentDescription = null,
+                                tint = androidx.compose.ui.graphics.Color(0xFFF59E0B), modifier = Modifier.size(16.dp))
+                            Text("Some items are pending sync",
+                                fontSize = 12.sp, color = androidx.compose.ui.graphics.Color(0xFFF59E0B))
+                        }
+                    }
+                }
                 item {
                     Text("Income Sources", fontSize = 17.sp, fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
@@ -127,33 +148,52 @@ private fun IncomeSummaryCard(label: String, value: String, color: androidx.comp
 @Composable
 private fun IncomeCard(income: Income, onDelete: () -> Unit) {
     var showConfirm by remember { mutableStateOf(false) }
+    val pendingColor = androidx.compose.ui.graphics.Color(0xFFF59E0B)
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 5.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(
+            containerColor = if (!income.isSynced) pendingColor.copy(alpha = 0.07f) else CardBackground
+        )
     ) {
         Column {
-            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(48.dp).clip(CircleShape).background(IncomeColor.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.TrendingUp, contentDescription = null,
-                    tint = IncomeColor, modifier = Modifier.size(22.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                if (!income.isSynced) {
+                    Box(
+                        modifier = Modifier
+                            .width(4.dp)
+                            .heightIn(min = 72.dp)
+                            .background(pendingColor, RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+                    )
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(income.source, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                    Text(income.date, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                    if (!income.notes.isNullOrBlank()) {
-                        Text(income.notes, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                Row(modifier = Modifier.padding(16.dp).weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.size(48.dp).clip(CircleShape).background(IncomeColor.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.TrendingUp, contentDescription = null,
+                        tint = IncomeColor, modifier = Modifier.size(22.dp))
                     }
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(formatKsh(income.amount), fontWeight = FontWeight.Bold, color = IncomeColor)
-                    IconButton(onClick = { showConfirm = true }, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete",
-                            tint = ExpenseColor.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(income.source, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                        Text(income.date, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                        if (!income.notes.isNullOrBlank()) {
+                            Text(income.notes, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                        }
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (!income.isSynced) {
+                                Icon(Icons.Default.CloudUpload, contentDescription = "Pending sync",
+                                    tint = pendingColor, modifier = Modifier.size(14.dp))
+                            }
+                            Text(formatKsh(income.amount), fontWeight = FontWeight.Bold, color = IncomeColor)
+                        }
+                        IconButton(onClick = { showConfirm = true }, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete",
+                                tint = ExpenseColor.copy(alpha = 0.5f), modifier = Modifier.size(16.dp))
+                        }
                     }
                 }
             }

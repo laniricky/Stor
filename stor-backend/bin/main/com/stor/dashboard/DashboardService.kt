@@ -83,8 +83,10 @@ class DashboardService {
         // Upcoming loan payments
         val upcoming = loanRepo.upcomingPayments(uuid).map { loan ->
             val today = LocalDate.now()
-            val dueDay = loan.dueDay ?: 0
-            val dueDate = LocalDate.of(today.year, today.month, minOf(dueDay, today.month.length(today.isLeapYear)))
+            val dueDay = loan.dueDay ?: 1
+            // Ensure dueDay is at least 1 and at most the length of the month to prevent DateTimeException
+            val safeDueDay = maxOf(1, minOf(dueDay, today.month.length(today.isLeapYear)))
+            val dueDate = LocalDate.of(today.year, today.month, safeDueDay)
             val daysUntil = java.time.temporal.ChronoUnit.DAYS.between(today, dueDate)
             val dueLabel = when {
                 daysUntil == 0L -> "Due today"

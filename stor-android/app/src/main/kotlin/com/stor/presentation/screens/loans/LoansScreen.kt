@@ -103,6 +103,27 @@ fun LoansScreen(
                     }
                 }
             } else {
+                // Pending sync banner
+                val hasUnsynced = state.loans.any { !it.isSynced }
+                if (hasUnsynced) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFFF59E0B).copy(alpha = 0.12f))
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.CloudUpload, contentDescription = null,
+                                tint = Color(0xFFF59E0B), modifier = Modifier.size(16.dp))
+                            Text("Some items are pending sync",
+                                fontSize = 12.sp, color = Color(0xFFF59E0B))
+                        }
+                    }
+                }
                 item {
                     Text("Your Loans", fontSize = 17.sp, fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
@@ -125,13 +146,26 @@ private fun LoanCard(loan: Loan, onViewRepayments: () -> Unit, onDelete: () -> U
     val progress = (loan.percentagePaid / 100).coerceIn(0.0, 1.0).toFloat()
     val statusColor = if (loan.status == "active") LoanColor else IncomeColor
     var showConfirm by remember { mutableStateOf(false) }
+    val pendingColor = Color(0xFFF59E0B)
 
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground)
+        colors = CardDefaults.cardColors(
+            containerColor = if (!loan.isSynced) pendingColor.copy(alpha = 0.07f) else CardBackground
+        )
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                if (!loan.isSynced) {
+                    Box(
+                        modifier = Modifier
+                            .width(4.dp)
+                            .heightIn(min = 100.dp)
+                            .background(pendingColor, RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp))
+                    )
+                }
+                Column(modifier = Modifier.padding(18.dp).weight(1f)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -142,12 +176,18 @@ private fun LoanCard(loan: Loan, onViewRepayments: () -> Unit, onDelete: () -> U
                         color = MaterialTheme.colorScheme.onSurface)
                     Text(loan.lender, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 }
-                Surface(shape = RoundedCornerShape(8.dp), color = statusColor.copy(alpha = 0.15f)) {
-                    Text(
-                        loan.status.replaceFirstChar { it.uppercase() },
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        fontSize = 12.sp, color = statusColor, fontWeight = FontWeight.Medium
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (!loan.isSynced) {
+                        Icon(Icons.Default.CloudUpload, contentDescription = "Pending sync",
+                            tint = pendingColor, modifier = Modifier.size(16.dp))
+                    }
+                    Surface(shape = RoundedCornerShape(8.dp), color = statusColor.copy(alpha = 0.15f)) {
+                        Text(
+                            loan.status.replaceFirstChar { it.uppercase() },
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = 12.sp, color = statusColor, fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
 
@@ -226,6 +266,8 @@ private fun LoanCard(loan: Loan, onViewRepayments: () -> Unit, onDelete: () -> U
                     TextButton(onClick = { onDelete(); showConfirm = false }) {
                         Text("Delete", color = ExpenseColor)
                     }
+                }
+            }
                 }
             }
         }

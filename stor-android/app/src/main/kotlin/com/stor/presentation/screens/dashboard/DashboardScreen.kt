@@ -60,6 +60,33 @@ fun DashboardScreen(
             .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
+        // ── OFFLINE BANNER ────────────────────────────────────────────
+        if (state.isOffline) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF59E0B).copy(alpha = 0.15f))
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.WifiOff,
+                        contentDescription = null,
+                        tint = Color(0xFFF59E0B),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        "Offline — showing cached data. Will sync when connected.",
+                        fontSize = 12.sp,
+                        color = Color(0xFFF59E0B)
+                    )
+                }
+            }
+        }
         // ── TOP BAR ──────────────────────────────────────────────────
         item {
             Row(
