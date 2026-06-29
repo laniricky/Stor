@@ -4,6 +4,7 @@ build/
 app/build/
 stor-backend/build/
 stor-android/build/
+stor-android/gradle.zip
 stor-android/app/build/
 
 # IDEs and environment
