@@ -25,21 +25,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.stor.domain.model.Expense
-import com.stor.domain.model.Loan
+import com.stor.domain.model.ChartDataPoint
+import com.stor.domain.model.RecentTransaction
+import com.stor.domain.model.UpcomingPayment
 import com.stor.presentation.navigation.Screen
 import com.stor.presentation.theme.*
 import java.text.NumberFormat
 import java.util.Locale
 
-// --- Dummy chart data (replace with real API data when available) ---
-private data class ChartPoint(val label: String, val income: Float, val expenses: Float)
-private val dummyChartData = listOf(
-    ChartPoint("1 May", 60f, 20f),
-    ChartPoint("8 May", 80f, 45f),
-    ChartPoint("15 May", 50f, 60f),
-    ChartPoint("22 May", 90f, 35f),
-    ChartPoint("29 May", 70f, 55f)
+// Dummy chart data is used as fallback when API returns empty list
+private val fallbackChartData = listOf(
+    ChartDataPoint("Jan", 0.0, 0.0),
+    ChartDataPoint("Feb", 0.0, 0.0),
+    ChartDataPoint("Mar", 0.0, 0.0),
+    ChartDataPoint("Apr", 0.0, 0.0),
+    ChartDataPoint("May", 0.0, 0.0),
+    ChartDataPoint("Jun", 0.0, 0.0)
 )
 
 @Composable
@@ -210,7 +211,9 @@ fun DashboardScreen(
 
         // ── OVERVIEW BAR CHART ───────────────────────────────────────
         item {
-            OverviewChartCard(data = dummyChartData)
+            val chartData = state.dashboard?.monthlyChart
+                ?.takeIf { it.isNotEmpty() } ?: fallbackChartData
+            OverviewChartCard(data = chartData, isRealData = !state.dashboard?.monthlyChart.isNullOrEmpty())
         }
 
         item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -220,9 +223,9 @@ fun DashboardScreen(
             item {
                 SectionHeader("Upcoming Loan Payments", "View all") { onNavigate(Screen.Loans.route) }
             }
-            items(state.dashboard!!.upcomingLoanPayments.take(2)) { loan ->
+            items(state.dashboard!!.upcomingLoanPayments.take(2)) { payment ->
                 UpcomingLoanItem(
-                    loan = loan,
+                    payment = payment,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
                 )
             }
@@ -245,10 +248,10 @@ fun DashboardScreen(
                     CircularProgressIndicator(color = TealPrimary)
                 }
             }
-        } else if (!state.dashboard?.recentExpenses.isNullOrEmpty()) {
-            items(state.dashboard!!.recentExpenses) { expense ->
+        } else if (!state.dashboard?.recentTransactions.isNullOrEmpty()) {
+            items(state.dashboard!!.recentTransactions) { tx ->
                 RecentTransactionItem(
-                    expense = expense,
+                    transaction = tx,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
                 )
             }
@@ -372,7 +375,7 @@ private fun QuickActionButton(
 }
 
 @Composable
-private fun OverviewChartCard(data: List<ChartPoint>) {
+private fun OverviewChartCard(data: List<ChartDataPoint>, isRealData: Boolean = false) {
     val incomeColor = IncomeColor
     val expenseColor = ExpenseColor
 
@@ -409,7 +412,8 @@ private fun OverviewChartCard(data: List<ChartPoint>) {
                     .fillMaxWidth()
                     .height(120.dp)
             ) {
-                val maxVal = data.maxOf { maxOf(it.income, it.expenses) }.coerceAtLeast(1f)
+                val maxVal = data.maxOf { maxOf(it.income, it.expenses) }
+                    .coerceAtLeast(1.0).toFloat()
                 val groupWidth = size.width / data.size
                 val barWidth = groupWidth * 0.2f
                 val gap = barWidth * 0.4f
@@ -417,8 +421,8 @@ private fun OverviewChartCard(data: List<ChartPoint>) {
 
                 data.forEachIndexed { i, point ->
                     val groupLeft = i * groupWidth + groupWidth * 0.1f
-                    val incomeH = (point.income / maxVal) * maxBarHeight
-                    val expH = (point.expenses / maxVal) * maxBarHeight
+                    val incomeH = (point.income.toFloat() / maxVal) * maxBarHeight
+                    val expH = (point.expenses.toFloat() / maxVal) * maxBarHeight
 
                     // Income bar
                     drawRoundRect(
@@ -453,12 +457,14 @@ private fun OverviewChartCard(data: List<ChartPoint>) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                "⚠ Chart shows sample data. Connect API to see real trends.",
-                fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
-            )
+            if (!isRealData) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "Add transactions to see real trends",
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+                )
+            }
         }
     }
 }
@@ -495,7 +501,7 @@ private fun SectionHeader(title: String, action: String, onAction: () -> Unit) {
 }
 
 @Composable
-private fun UpcomingLoanItem(loan: Loan, modifier: Modifier = Modifier) {
+private fun UpcomingLoanItem(payment: UpcomingPayment, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -522,16 +528,16 @@ private fun UpcomingLoanItem(loan: Loan, modifier: Modifier = Modifier) {
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(loan.name, fontWeight = FontWeight.SemiBold, fontSize = 15.sp,
+                Text(payment.loanName, fontWeight = FontWeight.SemiBold, fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurface)
                 Text(
-                    if (loan.dueDay != null) "Due: ${loan.dueDay}th of every month" else "No due date",
+                    payment.dueLabel,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
                 )
             }
             Text(
-                "-${formatKsh(loan.monthlyPayment ?: loan.remainingBalance)}",
+                formatKsh(payment.amount),
                 fontWeight = FontWeight.Bold,
                 color = ExpenseColor,
                 fontSize = 15.sp
@@ -541,9 +547,10 @@ private fun UpcomingLoanItem(loan: Loan, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun RecentTransactionItem(expense: Expense, modifier: Modifier = Modifier) {
-    val categoryIcon = categoryIcon(expense.category)
-    val categoryColor = categoryColor(expense.category)
+private fun RecentTransactionItem(transaction: RecentTransaction, modifier: Modifier = Modifier) {
+    val icon = categoryIcon(transaction.category)
+    val color = categoryColor(transaction.category)
+    val isExpense = transaction.type == "expense"
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -559,39 +566,41 @@ private fun RecentTransactionItem(expense: Expense, modifier: Modifier = Modifie
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(categoryColor.copy(alpha = 0.12f)),
+                    .background(color.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    categoryIcon,
+                    icon,
                     contentDescription = null,
-                    tint = categoryColor,
+                    tint = color,
                     modifier = Modifier.size(22.dp)
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    expense.title,
+                    transaction.title,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    expense.category,
+                    transaction.category,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
+                val amountText = if (isExpense) "-${formatKsh(kotlin.math.abs(transaction.amount))}"
+                                 else "+${formatKsh(transaction.amount)}"
                 Text(
-                    "-${formatKsh(expense.amount)}",
+                    amountText,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
-                    color = ExpenseColor
+                    color = if (isExpense) ExpenseColor else IncomeColor
                 )
                 Text(
-                    displayDate(expense.date),
+                    displayDate(transaction.date),
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 )

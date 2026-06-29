@@ -56,15 +56,39 @@ data class Repayment(
 )
 
 // Dashboard domain model
+data class UpcomingPayment(
+    val loanId: String,
+    val loanName: String,
+    val amount: Double,
+    val dueLabel: String
+)
+
+data class RecentTransaction(
+    val id: String,
+    val title: String,
+    val amount: Double,
+    val category: String,
+    val date: String,
+    val type: String
+)
+
+data class ChartDataPoint(
+    val label: String,
+    val income: Double,
+    val expenses: Double
+)
+
 data class Dashboard(
     val totalBalance: Double,
     val monthlyIncome: Double,
     val monthlySpending: Double,
     val outstandingDebt: Double,
     val todaySpending: Double,
-    val recentExpenses: List<Expense>,
-    val upcomingLoanPayments: List<Loan>
+    val recentTransactions: List<RecentTransaction>,
+    val upcomingLoanPayments: List<UpcomingPayment>,
+    val monthlyChart: List<ChartDataPoint>
 )
+
 
 // Report domain models
 data class MonthlyReport(

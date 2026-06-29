@@ -2,9 +2,8 @@ package com.stor.presentation.screens.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.stor.domain.model.ChartDataPoint
 import com.stor.domain.model.Dashboard
-import com.stor.domain.model.Expense
-import com.stor.domain.model.Loan
 import com.stor.domain.repository.DashboardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

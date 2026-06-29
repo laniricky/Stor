@@ -118,16 +118,42 @@ data class CreateRepaymentRequest(
     val notes: String? = null
 )
 
-// Dashboard
+// Dashboard - matches DashboardData from backend
 @Serializable
 data class DashboardDto(
     @SerialName("total_balance") val totalBalance: Double,
     @SerialName("monthly_income") val monthlyIncome: Double,
-    @SerialName("monthly_spending") val monthlySpending: Double,
-    @SerialName("outstanding_debt") val outstandingDebt: Double,
+    @SerialName("monthly_expenses") val monthlyExpenses: Double,
     @SerialName("today_spending") val todaySpending: Double,
-    @SerialName("recent_expenses") val recentExpenses: List<ExpenseDto>,
-    @SerialName("upcoming_loan_payments") val upcomingLoanPayments: List<LoanDto>
+    @SerialName("outstanding_debt") val outstandingDebt: Double,
+    @SerialName("upcoming_loan_payments") val upcomingLoanPayments: List<UpcomingPaymentDto>,
+    @SerialName("recent_expenses") val recentExpenses: List<RecentTransactionDto>,
+    @SerialName("monthly_chart") val monthlyChart: List<ChartDataPointDto>
+)
+
+@Serializable
+data class UpcomingPaymentDto(
+    @SerialName("loan_id") val loanId: String,
+    @SerialName("loan_name") val loanName: String,
+    val amount: Double,
+    @SerialName("due_label") val dueLabel: String
+)
+
+@Serializable
+data class RecentTransactionDto(
+    val id: String,
+    val title: String,
+    val amount: Double,
+    val category: String,
+    val date: String,
+    val type: String
+)
+
+@Serializable
+data class ChartDataPointDto(
+    val label: String,
+    val income: Double,
+    val expenses: Double
 )
 
 // Reports
