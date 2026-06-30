@@ -24,6 +24,7 @@ import com.stor.presentation.screens.expenses.AddExpenseScreen
 import com.stor.presentation.screens.income.IncomeScreen
 import com.stor.presentation.screens.income.AddIncomeScreen
 import com.stor.presentation.screens.loans.LoansScreen
+import com.stor.presentation.screens.loans.ArchivedLoansScreen
 import com.stor.presentation.screens.loans.AddLoanScreen
 import com.stor.presentation.screens.loans.LoanDetailScreen
 import com.stor.presentation.screens.loans.RepaymentsScreen
@@ -120,6 +121,9 @@ fun StorNavGraph(
                 }
                 composable(Screen.Loans.route) {
                     LoansScreen(navController = navController)
+                }
+                composable(Screen.ArchivedLoans.route) {
+                    ArchivedLoansScreen(navController = navController)
                 }
                 composable(Screen.More.route) {
                     MoreScreen(

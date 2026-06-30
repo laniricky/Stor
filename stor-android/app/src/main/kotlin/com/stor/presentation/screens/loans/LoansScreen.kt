@@ -32,7 +32,8 @@ fun LoansScreen(
     viewModel: LoansViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val totalDebt = state.loans.filter { loan -> loan.status == "active" }.sumOf { loan -> loan.remainingBalance }
+    val activeLoans = state.loans.filter { it.remainingBalance > 0 }
+    val totalDebt = activeLoans.sumOf { loan -> loan.remainingBalance }
 
     LaunchedEffect(Unit) {
         viewModel.sync()
@@ -70,14 +71,19 @@ fun LoansScreen(
                                 Text("Outstanding debt", fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
                             }
-                            IconButton(onClick = { viewModel.sync() }) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = LoanColor)
+                            Row {
+                                IconButton(onClick = { navController.navigate(Screen.ArchivedLoans.route) }) {
+                                    Icon(Icons.Default.Archive, contentDescription = "Archived Loans", tint = LoanColor)
+                                }
+                                IconButton(onClick = { viewModel.sync() }) {
+                                    Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = LoanColor)
+                                }
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(formatKsh(totalDebt), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = LoanColor)
                         Text(
-                            "across ${state.loans.count { loan -> loan.status == "active" }} active loans",
+                            "across ${activeLoans.size} active loans",
                             fontSize = 13.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                         )
                     }
@@ -90,7 +96,7 @@ fun LoansScreen(
                         CircularProgressIndicator(color = LoanColor)
                     }
                 }
-            } else if (state.loans.isEmpty()) {
+            } else if (activeLoans.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(64.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -104,7 +110,7 @@ fun LoansScreen(
                 }
             } else {
                 // Pending sync banner
-                val hasUnsynced = state.loans.any { !it.isSynced }
+                val hasUnsynced = activeLoans.any { !it.isSynced }
                 if (hasUnsynced) {
                     item {
                         Row(
@@ -129,7 +135,7 @@ fun LoansScreen(
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         color = MaterialTheme.colorScheme.onBackground)
                 }
-                items(items = state.loans, key = { loan -> loan.id }) { loan ->
+                items(items = activeLoans, key = { loan -> loan.id }) { loan ->
                     LoanCard(
                         loan = loan,
                         onClick = { navController.navigate(Screen.LoanDetail.createRoute(loan.id)) },
@@ -143,7 +149,7 @@ fun LoansScreen(
 }
 
 @Composable
-private fun LoanCard(loan: Loan, onClick: () -> Unit, onViewRepayments: () -> Unit, onDelete: () -> Unit) {
+fun LoanCard(loan: Loan, onClick: () -> Unit, onViewRepayments: () -> Unit, onDelete: () -> Unit) {
     val progress = (loan.percentagePaid / 100).coerceIn(0.0, 1.0).toFloat()
     val statusColor = if (loan.status == "active") LoanColor else IncomeColor
     var showConfirm by remember { mutableStateOf(false) }
@@ -276,7 +282,7 @@ private fun LoanCard(loan: Loan, onClick: () -> Unit, onViewRepayments: () -> Un
 }
 
 @Composable
-private fun LoanChip(text: String) {
+fun LoanChip(text: String) {
     Surface(shape = RoundedCornerShape(6.dp), color = LoanColor.copy(alpha = 0.1f)) {
         Text(text, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
             fontSize = 11.sp, color = LoanColor)
