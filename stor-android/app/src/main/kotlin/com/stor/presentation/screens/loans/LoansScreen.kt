@@ -40,6 +40,7 @@ fun LoansScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(

@@ -58,7 +58,7 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(bottom = 100.dp)
+        contentPadding = PaddingValues(bottom = 24.dp)
     ) {
         // ── OFFLINE BANNER ────────────────────────────────────────────
         if (state.isOffline) {

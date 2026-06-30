@@ -44,6 +44,7 @@ fun MoreScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        contentWindowInsets = WindowInsets(0.dp),
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
