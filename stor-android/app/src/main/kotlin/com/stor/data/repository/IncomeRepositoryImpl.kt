@@ -14,8 +14,13 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import com.stor.data.sync.SyncWorker
+
 @Singleton
 class IncomeRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val api: StorApi,
     private val dao: IncomeDao
 ) : IncomeRepository {
@@ -47,6 +52,7 @@ class IncomeRepositoryImpl @Inject constructor(
                 isSynced = false
             )
             dao.insertIncome(localEntity)
+            SyncWorker.enqueue(context)
             localEntity.toDomain()
         }
     }

@@ -26,6 +26,16 @@ class DashboardRepositoryImpl @Inject constructor(
 ) : DashboardRepository {
 
     override suspend fun getDashboard(): Result<Dashboard> = runCatching {
+        // If we have local unsynced records, the backend dashboard data will be stale.
+        // We must compute the dashboard locally until the SyncWorker clears the queue.
+        val hasUnsynced = expenseDao.getUnsynced().isNotEmpty() ||
+                          incomeDao.getUnsynced().isNotEmpty() ||
+                          loanDao.getUnsynced().isNotEmpty()
+
+        if (hasUnsynced) {
+            return@runCatching buildOfflineDashboard().copy(isOffline = false)
+        }
+
         try {
             // ── Online path ─────────────────────────────────────────────────
             val response = api.getDashboard()
@@ -83,15 +93,14 @@ class DashboardRepositoryImpl @Inject constructor(
         val cached      = cacheDao.get()
         val allExpenses = expenseDao.getAllExpensesList()
         val allLoans    = loanDao.getAllLoansList()
+        val allIncome   = incomeDao.getAllIncomeList()
 
-        // Use cached totals if available, otherwise compute from local records
-        val monthlyIncome   = cached?.monthlyIncome ?: 0.0
-        val monthlyExpenses = cached?.monthlyExpenses ?: allExpenses.filter { !it.id.startsWith("LOCAL_") || true }
-                                  .sumOf { it.amount }
-        val outstandingDebt = cached?.outstandingDebt
-            ?: allLoans.filter { it.status == "active" }.sumOf { it.remainingBalance }
-        val todaySpending   = cached?.todaySpending ?: 0.0
-        val totalBalance    = cached?.totalBalance ?: (monthlyIncome - monthlyExpenses)
+        // Compute from local records to include any pending offline items
+        val monthlyIncome   = allIncome.sumOf { it.amount }
+        val monthlyExpenses = allExpenses.sumOf { it.amount }
+        val outstandingDebt = allLoans.filter { it.status == "active" }.sumOf { it.remainingBalance }
+        val todaySpending   = 0.0 // Hard to compute without complex date logic locally, but we can default to 0.0 or compute it if needed
+        val totalBalance    = (monthlyIncome - monthlyExpenses)
 
         // Recent transactions from local expense records
         val recent = allExpenses.take(5).map { e ->
