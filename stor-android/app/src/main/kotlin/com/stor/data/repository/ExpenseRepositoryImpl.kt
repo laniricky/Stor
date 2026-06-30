@@ -89,6 +89,10 @@ class ExpenseRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteExpense(id: String): Result<Unit> = runCatching {
+        if (id.startsWith("LOCAL_")) {
+            dao.deleteExpenseById(id)
+            return@runCatching
+        }
         val response = api.deleteExpense(id)
         if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         dao.deleteExpenseById(id)

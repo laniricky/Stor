@@ -69,6 +69,10 @@ class IncomeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteIncome(id: String): Result<Unit> = runCatching {
+        if (id.startsWith("LOCAL_")) {
+            dao.deleteIncomeById(id)
+            return@runCatching
+        }
         val response = api.deleteIncome(id)
         if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         dao.deleteIncomeById(id)

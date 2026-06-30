@@ -88,6 +88,10 @@ class LoanRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteLoan(id: String): Result<Unit> = runCatching {
+        if (id.startsWith("LOCAL_")) {
+            dao.deleteLoanById(id)
+            return@runCatching
+        }
         val response = api.deleteLoan(id)
         if (!response.isSuccessful) throw Exception(response.getErrorMessage())
         dao.deleteLoanById(id)
