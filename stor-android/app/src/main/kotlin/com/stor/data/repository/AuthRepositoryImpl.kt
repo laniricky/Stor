@@ -9,13 +9,17 @@ import com.stor.data.remote.dto.RegisterRequest
 import com.stor.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.stor.data.local.StorDatabase
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val api: StorApi,
-    private val prefs: AuthPreferences
+    private val prefs: AuthPreferences,
+    private val db: StorDatabase
 ) : AuthRepository {
 
     override suspend fun login(email: String, password: String): Result<Unit> = runCatching {
@@ -38,7 +42,12 @@ class AuthRepositoryImpl @Inject constructor(
         prefs.saveUser(body.user.id, body.user.name, body.user.email)
     }
 
-    override suspend fun logout() = prefs.clearTokens()
+    override suspend fun logout() {
+        prefs.clearTokens()
+        withContext(Dispatchers.IO) {
+            db.clearAllTables()
+        }
+    }
 
     override fun isLoggedIn(): Flow<Boolean> = prefs.accessToken.map { !it.isNullOrBlank() }
 }
