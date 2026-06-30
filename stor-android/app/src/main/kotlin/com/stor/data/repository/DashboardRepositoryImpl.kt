@@ -13,6 +13,8 @@ import com.stor.domain.model.RecentTransaction
 import com.stor.domain.model.UpcomingPayment
 import com.stor.domain.repository.DashboardRepository
 import java.io.IOException
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -88,31 +90,44 @@ class DashboardRepositoryImpl @Inject constructor(
         }
     }
 
-    /** Build a dashboard approximation from locally cached Room data. */
+    /** Build a dashboard approximation from locally cached Room data with proper date filtering. */
     private suspend fun buildOfflineDashboard(): Dashboard {
-        val cached      = cacheDao.get()
         val allExpenses = expenseDao.getAllExpensesList()
         val allLoans    = loanDao.getAllLoansList()
         val allIncome   = incomeDao.getAllIncomeList()
 
-        // Compute from local records to include any pending offline items
-        val monthlyIncome   = allIncome.sumOf { it.amount }
-        val monthlyExpenses = allExpenses.sumOf { it.amount }
-        val outstandingDebt = allLoans.filter { it.status == "active" }.sumOf { it.remainingBalance }
-        val todaySpending   = 0.0 // Hard to compute without complex date logic locally, but we can default to 0.0 or compute it if needed
-        val totalBalance    = (monthlyIncome - monthlyExpenses)
+        val today = LocalDate.now()
+        val todayStr = today.format(DateTimeFormatter.ISO_LOCAL_DATE)          // "yyyy-MM-dd"
+        val currentYearMonth = today.format(DateTimeFormatter.ofPattern("yyyy-MM")) // "yyyy-MM"
 
-        // Recent transactions from local expense records
-        val recent = allExpenses.take(5).map { e ->
-            RecentTransaction(
-                id       = e.id,
-                title    = e.title,
-                amount   = -e.amount,
-                category = e.category,
-                date     = e.date,
-                type     = "expense"
-            )
-        }
+        // Filter to current month only — date field is stored as "yyyy-MM-dd"
+        val thisMonthExpenses = allExpenses.filter { it.date.startsWith(currentYearMonth) }
+        val thisMonthIncome   = allIncome.filter   { it.date.startsWith(currentYearMonth) }
+
+        // Today's spending — expenses whose date matches today exactly
+        val todaySpending = allExpenses
+            .filter { it.date.startsWith(todayStr) }
+            .sumOf { it.amount }
+
+        val monthlyIncome   = thisMonthIncome.sumOf { it.amount }
+        val monthlyExpenses = thisMonthExpenses.sumOf { it.amount }
+        val outstandingDebt = allLoans.filter { it.status == "active" }.sumOf { it.remainingBalance }
+        val totalBalance    = monthlyIncome - monthlyExpenses
+
+        // Recent transactions — all local expenses sorted newest first
+        val recent = allExpenses
+            .sortedByDescending { it.date }
+            .take(5)
+            .map { e ->
+                RecentTransaction(
+                    id       = e.id,
+                    title    = e.title,
+                    amount   = -e.amount,
+                    category = e.category,
+                    date     = e.date,
+                    type     = "expense"
+                )
+            }
 
         // Upcoming payments from local loan records
         val upcoming = allLoans.filter { it.status == "active" && it.dueDay != null }.map { l ->
