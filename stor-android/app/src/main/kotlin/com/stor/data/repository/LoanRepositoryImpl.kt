@@ -1,6 +1,7 @@
 package com.stor.data.repository
 
 import com.stor.data.local.dao.LoanDao
+import com.stor.data.local.dao.RepaymentDao
 import com.stor.data.local.entities.LoanEntity
 import com.stor.data.remote.api.StorApi
 import com.stor.data.remote.dto.CreateLoanRequest
@@ -22,16 +23,34 @@ import com.stor.data.sync.SyncWorker
 class LoanRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val api: StorApi,
-    private val dao: LoanDao
+    private val dao: LoanDao,
+    private val repaymentDao: RepaymentDao
 ) : LoanRepository {
 
     override fun getLoans(): Flow<List<Loan>> =
-        dao.getAllLoans().map { it.map { e -> e.toDomain() } }
+        dao.getAllLoans().map { list -> 
+            list.map { e -> 
+                val totalRepaid = repaymentDao.getTotalRepaidForLoan(e.id) ?: 0.0
+                val domain = e.toDomain()
+                domain.copy(remainingBalance = maxOf(0.0, domain.originalAmount - totalRepaid))
+            } 
+        }
 
     override fun getActiveLoans(): Flow<List<Loan>> =
-        dao.getActiveLoans().map { it.map { e -> e.toDomain() } }
+        dao.getActiveLoans().map { list -> 
+            list.map { e -> 
+                val totalRepaid = repaymentDao.getTotalRepaidForLoan(e.id) ?: 0.0
+                val domain = e.toDomain()
+                domain.copy(remainingBalance = maxOf(0.0, domain.originalAmount - totalRepaid))
+            } 
+        }
 
-    override suspend fun getLoanById(id: String): Loan? = dao.getLoanById(id)?.toDomain()
+    override suspend fun getLoanById(id: String): Loan? {
+        val entity = dao.getLoanById(id) ?: return null
+        val totalRepaid = repaymentDao.getTotalRepaidForLoan(id) ?: 0.0
+        val domain = entity.toDomain()
+        return domain.copy(remainingBalance = maxOf(0.0, domain.originalAmount - totalRepaid))
+    }
 
     override suspend fun createLoan(loan: Loan): Result<Loan> = runCatching {
         try {

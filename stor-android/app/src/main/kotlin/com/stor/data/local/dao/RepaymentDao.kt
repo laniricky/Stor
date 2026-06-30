@@ -12,6 +12,9 @@ interface RepaymentDao {
     @Query("SELECT * FROM repayments WHERE id = :id")
     suspend fun getRepaymentById(id: String): RepaymentEntity?
 
+    @Query("SELECT SUM(amount_paid) FROM repayments WHERE loan_id = :loanId")
+    suspend fun getTotalRepaidForLoan(loanId: String): Double?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRepayment(repayment: RepaymentEntity)
 

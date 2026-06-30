@@ -42,6 +42,9 @@ class RepaymentsViewModel @Inject constructor(
     private val _repayments = MutableStateFlow<List<Repayment>>(emptyList())
     val repayments: StateFlow<List<Repayment>> = _repayments
 
+    private val _loanName = MutableStateFlow<String?>(null)
+    val loanName: StateFlow<String?> = _loanName
+
     private val _totalPaid = MutableStateFlow(0.0)
     val totalPaid: StateFlow<Double> = _totalPaid
 
@@ -51,6 +54,8 @@ class RepaymentsViewModel @Inject constructor(
     fun loadRepayments(loanId: String) {
         viewModelScope.launch {
             _isLoading.value = true
+            val loan = loanRepository.getLoanById(loanId)
+            _loanName.value = loan?.name
             repository.syncRepayments(loanId)
             // Also sync the loan itself so remaining balance updates
             loanRepository.syncLoans()
@@ -73,6 +78,7 @@ fun RepaymentsScreen(
     val repayments by viewModel.repayments.collectAsState()
     val totalPaid by viewModel.totalPaid.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val loanName by viewModel.loanName.collectAsState()
 
     LaunchedEffect(loanId) {
         viewModel.loadRepayments(loanId)
@@ -83,7 +89,7 @@ fun RepaymentsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Repayments", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
+                    Text(loanName ?: "Repayments", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
