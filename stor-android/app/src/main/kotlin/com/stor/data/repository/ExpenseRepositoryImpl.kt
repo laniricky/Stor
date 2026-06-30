@@ -13,6 +13,7 @@ import java.io.IOException
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.util.Log
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -99,37 +100,42 @@ class ExpenseRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncExpenses(): Result<Unit> = runCatching {
-        // 1. Push any locally-created (unsynced) expenses to the server
-        val unsynced = dao.getUnsynced()
-        for (entity in unsynced) {
-            try {
-                val response = api.createExpense(
-                    CreateExpenseRequest(
-                        title = entity.title,
-                        description = entity.description,
-                        amount = entity.amount,
-                        category = entity.category,
-                        paymentMethod = entity.paymentMethod,
-                        date = entity.date,
-                        notes = entity.notes
+        try {
+            // 1. Push any locally-created (unsynced) expenses to the server
+            val unsynced = dao.getUnsynced()
+            for (entity in unsynced) {
+                try {
+                    val response = api.createExpense(
+                        CreateExpenseRequest(
+                            title = entity.title,
+                            description = entity.description,
+                            amount = entity.amount,
+                            category = entity.category,
+                            paymentMethod = entity.paymentMethod,
+                            date = entity.date,
+                            notes = entity.notes
+                        )
                     )
-                )
-                if (response.isSuccessful) {
-                    // Replace temp local record with server-assigned record
-                    dao.hardDelete(entity.id)
-                    response.body()?.let { dao.insertExpense(it.toEntity(isSynced = true)) }
-                }
-            } catch (_: IOException) { /* stay offline, retry next time */ }
-        }
+                    if (response.isSuccessful) {
+                        // Replace temp local record with server-assigned record
+                        dao.hardDelete(entity.id)
+                        response.body()?.let { dao.insertExpense(it.toEntity(isSynced = true)) }
+                    }
+                } catch (_: IOException) { /* stay offline, retry next time */ }
+            }
 
-        // 2. Full refresh from server
-        val response = api.getExpenses()
-        if (!response.isSuccessful) throw Exception(response.getErrorMessage())
-        val expenses = response.body() ?: error("Sync failed")
-        // Remove only synced records before replacing (preserve any still-pending local ones)
-        val stillUnsynced = dao.getUnsynced().map { it.id }.toSet()
-        dao.getAllExpensesList().filter { it.id !in stillUnsynced }.forEach { dao.hardDelete(it.id) }
-        dao.insertExpenses(expenses.map { it.toEntity(isSynced = true) })
+            // 2. Full refresh from server
+            val response = api.getExpenses()
+            if (!response.isSuccessful) throw Exception(response.getErrorMessage())
+            val expenses = response.body()?.expenses ?: error("Sync failed")
+            // Remove only synced records before replacing (preserve any still-pending local ones)
+            val stillUnsynced = dao.getUnsynced().map { it.id }.toSet()
+            dao.getAllExpensesList().filter { it.id !in stillUnsynced }.forEach { dao.hardDelete(it.id) }
+            dao.insertExpenses(expenses.map { it.toEntity(isSynced = true) })
+        } catch (e: Exception) {
+            Log.e("SYNC_ERROR", "syncExpenses failed", e)
+            throw e
+        }
     }
 }
 

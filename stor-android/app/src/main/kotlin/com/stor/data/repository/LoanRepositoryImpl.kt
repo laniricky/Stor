@@ -139,10 +139,11 @@ class LoanRepositoryImpl @Inject constructor(
         // 2. Full refresh
         val response = api.getLoans()
         if (!response.isSuccessful) throw Exception(response.getErrorMessage())
-        val loans = response.body() ?: error("Sync failed")
+        val loansList = response.body()?.loans ?: error("Sync failed")
+        
         val stillUnsynced = dao.getUnsynced().map { it.id }.toSet()
         dao.getAllLoansList().filter { it.id !in stillUnsynced }.forEach { dao.hardDelete(it.id) }
-        dao.insertLoans(loans.map { it.toEntity(isSynced = true) })
+        dao.insertLoans(loansList.map { it.toEntity(isSynced = true) })
     }
 }
 

@@ -93,13 +93,14 @@ class IncomeRepositoryImpl @Inject constructor(
             } catch (_: IOException) { }
         }
 
-        // 2. Full refresh
+        // 2. Full refresh from server
         val response = api.getIncome()
         if (!response.isSuccessful) throw Exception(response.getErrorMessage())
-        val items = response.body() ?: error("Sync failed")
+        val incomeList = response.body()?.income ?: error("Sync failed")
+        
         val stillUnsynced = dao.getUnsynced().map { it.id }.toSet()
         dao.getAllIncomeList().filter { it.id !in stillUnsynced }.forEach { dao.hardDelete(it.id) }
-        dao.insertIncomes(items.map { it.toEntity(isSynced = true) })
+        dao.insertIncomes(incomeList.map { it.toEntity(isSynced = true) })
     }
 }
 

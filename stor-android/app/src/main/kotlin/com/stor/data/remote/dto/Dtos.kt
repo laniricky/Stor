@@ -177,3 +177,32 @@ data class CategoryReportDto(
 // Generic wrapper
 @Serializable
 data class MessageResponse(val message: String)
+
+@Serializable
+data class ExpensesResponse(
+    val expenses: List<ExpenseDto>,
+    val total: Int,
+    @SerialName("monthly_total") val monthlyTotal: Double
+)
+
+@Serializable
+data class IncomeResponse(
+    val income: List<IncomeDto>,
+    val total: Int,
+    @SerialName("monthly_total") val monthlyTotal: Double,
+    @SerialName("annual_total") val annualTotal: Double
+)
+
+@Serializable
+data class LoansResponse(
+    val loans: List<LoanDto>,
+    @SerialName("total_outstanding") val totalOutstanding: Double,
+    @SerialName("active_loan_count") val activeLoanCount: Int
+)
+
+@Serializable
+data class RepaymentsResponse(
+    val repayments: List<RepaymentDto>,
+    @SerialName("total_paid") val totalPaid: Double,
+    @SerialName("total_remaining") val totalRemaining: Double
+)

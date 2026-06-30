@@ -26,7 +26,7 @@ interface StorApi {
         @Query("category") category: String? = null,
         @Query("from") from: String? = null,
         @Query("to") to: String? = null
-    ): Response<List<ExpenseDto>>
+    ): Response<ExpensesResponse>
 
     @GET("expenses/{id}")
     suspend fun getExpense(@Path("id") id: String): Response<ExpenseDto>
@@ -45,7 +45,7 @@ interface StorApi {
 
     // Income
     @GET("income")
-    suspend fun getIncome(): Response<List<IncomeDto>>
+    suspend fun getIncome(): Response<IncomeResponse>
 
     @GET("income/{id}")
     suspend fun getIncomeById(@Path("id") id: String): Response<IncomeDto>
@@ -64,7 +64,7 @@ interface StorApi {
 
     // Loans
     @GET("loans")
-    suspend fun getLoans(): Response<List<LoanDto>>
+    suspend fun getLoans(): Response<LoansResponse>
 
     @GET("loans/{id}")
     suspend fun getLoan(@Path("id") id: String): Response<LoanDto>
@@ -83,7 +83,7 @@ interface StorApi {
 
     // Repayments
     @GET("loans/{loanId}/repayments")
-    suspend fun getRepayments(@Path("loanId") loanId: String): Response<List<RepaymentDto>>
+    suspend fun getRepayments(@Path("loanId") loanId: String): Response<RepaymentsResponse>
 
     @POST("loans/{loanId}/repayments")
     suspend fun createRepayment(

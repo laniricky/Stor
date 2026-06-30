@@ -35,8 +35,8 @@ class RepaymentRepositoryImpl @Inject constructor(
     override suspend fun syncRepayments(loanId: String): Result<Unit> = runCatching {
         val response = api.getRepayments(loanId)
         if (!response.isSuccessful) throw Exception(response.getErrorMessage())
-        val repayments = response.body() ?: error("Sync failed")
-        dao.insertRepayments(repayments.map { it.toEntity() })
+        val repaymentsList = response.body()?.repayments ?: error("Sync failed")
+        dao.insertRepayments(repaymentsList.map { it.toEntity() })
     }
 }
 
