@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +46,9 @@ class RepaymentsViewModel @Inject constructor(
     private val _loanName = MutableStateFlow<String?>(null)
     val loanName: StateFlow<String?> = _loanName
 
+    private val _isArchived = MutableStateFlow(false)
+    val isArchived: StateFlow<Boolean> = _isArchived
+
     private val _totalPaid = MutableStateFlow(0.0)
     val totalPaid: StateFlow<Double> = _totalPaid
 
@@ -56,6 +60,7 @@ class RepaymentsViewModel @Inject constructor(
             _isLoading.value = true
             val loan = loanRepository.getLoanById(loanId)
             _loanName.value = loan?.name
+            _isArchived.value = (loan?.remainingBalance ?: 0.0) <= 0.0
             repository.syncRepayments(loanId)
             // Also sync the loan itself so remaining balance updates
             loanRepository.syncLoans()
@@ -79,6 +84,8 @@ fun RepaymentsScreen(
     val totalPaid by viewModel.totalPaid.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val loanName by viewModel.loanName.collectAsState()
+    val isArchived by viewModel.isArchived.collectAsState()
+    val themeColor = if (isArchived) ArchivedColor else LoanColor
 
     LaunchedEffect(loanId) {
         viewModel.loadRepayments(loanId)
@@ -93,20 +100,22 @@ fun RepaymentsScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = LoanColor)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = themeColor)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Screen.AddRepayment.createRoute(loanId)) },
-                containerColor = LoanColor,
-                contentColor = BackgroundDark,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Repayment")
+            if (!isArchived) {
+                FloatingActionButton(
+                    onClick = { navController.navigate(Screen.AddRepayment.createRoute(loanId)) },
+                    containerColor = themeColor,
+                    contentColor = BackgroundDark,
+                    shape = CircleShape
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Repayment")
+                }
             }
         }
     ) { padding ->
@@ -125,14 +134,14 @@ fun RepaymentsScreen(
                     Icon(
                         Icons.Default.DateRange,
                         contentDescription = null,
-                        tint = LoanColor,
+                        tint = themeColor,
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Total Repaid", fontSize = 13.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
-                    Text(formatKsh(totalPaid), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = LoanColor)
+                    Text(formatKsh(totalPaid), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = themeColor)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         "${repayments.size} payment${if (repayments.size != 1) "s" else ""}",
@@ -147,7 +156,7 @@ fun RepaymentsScreen(
             if (isLoading && repayments.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = LoanColor)
+                        CircularProgressIndicator(color = themeColor)
                     }
                 }
             } else if (repayments.isEmpty()) {
@@ -171,7 +180,7 @@ fun RepaymentsScreen(
                     )
                 }
                 items(repayments) { repayment ->
-                    RepaymentRow(repayment)
+                    RepaymentRow(repayment, themeColor)
                 }
             }
         }
@@ -179,7 +188,7 @@ fun RepaymentsScreen(
 }
 
 @Composable
-fun RepaymentRow(repayment: Repayment) {
+fun RepaymentRow(repayment: Repayment, themeColor: Color = LoanColor) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -198,11 +207,11 @@ fun RepaymentRow(repayment: Repayment) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Surface(
                     shape = CircleShape,
-                    color = LoanColor.copy(alpha = 0.12f),
+                    color = themeColor.copy(alpha = 0.12f),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        Icon(Icons.Default.DateRange, contentDescription = null, tint = LoanColor, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.DateRange, contentDescription = null, tint = themeColor, modifier = Modifier.size(20.dp))
                     }
                 }
                 Column {
@@ -219,7 +228,7 @@ fun RepaymentRow(repayment: Repayment) {
                 text = formatKsh(repayment.amountPaid),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = LoanColor
+                color = themeColor
             )
         }
     }
