@@ -11,7 +11,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.stor.domain.model.Repayment
 import com.stor.domain.repository.RepaymentRepository
@@ -72,7 +72,7 @@ class AddRepaymentViewModel @Inject constructor(
 fun AddRepaymentScreen(
     navController: NavController,
     loanId: String,
-    viewModel: AddRepaymentViewModel = viewModel()
+    viewModel: AddRepaymentViewModel = hiltViewModel()
 ) {
     var amount by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }

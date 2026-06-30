@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.stor.domain.model.Repayment
 import com.stor.domain.repository.RepaymentRepository
@@ -59,7 +59,7 @@ class RepaymentsViewModel @Inject constructor(
 fun RepaymentsScreen(
     navController: NavController,
     loanId: String,
-    viewModel: RepaymentsViewModel = viewModel()
+    viewModel: RepaymentsViewModel = hiltViewModel()
 ) {
     val repayments by viewModel.repayments.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()

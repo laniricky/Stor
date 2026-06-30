@@ -25,6 +25,7 @@ import com.stor.presentation.screens.income.IncomeScreen
 import com.stor.presentation.screens.income.AddIncomeScreen
 import com.stor.presentation.screens.loans.LoansScreen
 import com.stor.presentation.screens.loans.AddLoanScreen
+import com.stor.presentation.screens.loans.LoanDetailScreen
 import com.stor.presentation.screens.loans.RepaymentsScreen
 import com.stor.presentation.screens.loans.AddRepaymentScreen
 import com.stor.presentation.screens.more.MoreScreen
@@ -138,6 +139,10 @@ fun StorNavGraph(
                 }
                 composable(Screen.AddLoan.route) {
                     AddLoanScreen(navController = navController)
+                }
+                composable(Screen.LoanDetail.route) { backStackEntry ->
+                    val loanId = backStackEntry.arguments?.getString("id") ?: ""
+                    LoanDetailScreen(navController = navController, loanId = loanId)
                 }
                 composable(Screen.Repayments.route) { backStackEntry ->
                     val loanId = backStackEntry.arguments?.getString("loanId") ?: ""

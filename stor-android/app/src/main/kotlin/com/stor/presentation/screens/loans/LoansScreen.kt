@@ -132,6 +132,7 @@ fun LoansScreen(
                 items(items = state.loans, key = { loan -> loan.id }) { loan ->
                     LoanCard(
                         loan = loan,
+                        onClick = { navController.navigate(Screen.LoanDetail.createRoute(loan.id)) },
                         onViewRepayments = { navController.navigate(Screen.Repayments.createRoute(loan.id)) },
                         onDelete = { viewModel.delete(loan.id) }
                     )
@@ -142,14 +143,14 @@ fun LoansScreen(
 }
 
 @Composable
-private fun LoanCard(loan: Loan, onViewRepayments: () -> Unit, onDelete: () -> Unit) {
+private fun LoanCard(loan: Loan, onClick: () -> Unit, onViewRepayments: () -> Unit, onDelete: () -> Unit) {
     val progress = (loan.percentagePaid / 100).coerceIn(0.0, 1.0).toFloat()
     val statusColor = if (loan.status == "active") LoanColor else IncomeColor
     var showConfirm by remember { mutableStateOf(false) }
     val pendingColor = Color(0xFFF59E0B)
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp).clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (!loan.isSynced) pendingColor.copy(alpha = 0.07f) else CardBackground
