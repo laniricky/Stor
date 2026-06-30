@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.stor.data.preferences.AuthPreferences
 import com.stor.data.remote.api.StorApi
 import com.stor.data.remote.interceptors.AuthInterceptor
+import com.stor.data.remote.interceptors.TokenAuthenticator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,7 +44,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authPreferences: AuthPreferences): OkHttpClient {
+    fun provideOkHttpClient(
+        authPreferences: AuthPreferences,
+        tokenAuthenticator: TokenAuthenticator
+    ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
@@ -52,6 +56,7 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
+            .authenticator(tokenAuthenticator)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
