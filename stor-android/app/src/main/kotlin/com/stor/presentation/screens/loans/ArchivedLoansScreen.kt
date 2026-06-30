@@ -23,7 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.stor.presentation.navigation.Screen
 import com.stor.presentation.screens.dashboard.formatKsh
-import com.stor.presentation.theme.LoanColor
+import com.stor.presentation.theme.ArchivedColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,14 +63,14 @@ fun ArchivedLoansScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Brush.verticalGradient(listOf(LoanColor.copy(alpha = 0.12f), Color.Transparent)))
+                        .background(Brush.verticalGradient(listOf(ArchivedColor.copy(alpha = 0.12f), Color.Transparent)))
                         .padding(horizontal = 20.dp, vertical = 24.dp)
                 ) {
                     Column {
                         Text("Total Paid Off", fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(formatKsh(totalPaidOff), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = LoanColor)
+                        Text(formatKsh(totalPaidOff), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = ArchivedColor)
                         Text(
                             "across ${archivedLoans.size} fully paid loans",
                             fontSize = 13.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
@@ -82,7 +82,7 @@ fun ArchivedLoansScreen(
             if (state.isLoading) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = LoanColor)
+                        CircularProgressIndicator(color = ArchivedColor)
                     }
                 }
             } else if (archivedLoans.isEmpty()) {
@@ -101,6 +101,7 @@ fun ArchivedLoansScreen(
                 items(items = archivedLoans, key = { loan -> loan.id }) { loan ->
                     LoanCard(
                         loan = loan,
+                        themeColor = ArchivedColor,
                         onClick = { navController.navigate(Screen.LoanDetail.createRoute(loan.id)) },
                         onViewRepayments = { navController.navigate(Screen.Repayments.createRoute(loan.id)) },
                         onDelete = { viewModel.delete(loan.id) }

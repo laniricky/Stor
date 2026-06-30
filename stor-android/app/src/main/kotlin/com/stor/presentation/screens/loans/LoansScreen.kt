@@ -149,9 +149,9 @@ fun LoansScreen(
 }
 
 @Composable
-fun LoanCard(loan: Loan, onClick: () -> Unit, onViewRepayments: () -> Unit, onDelete: () -> Unit) {
+fun LoanCard(loan: Loan, themeColor: Color = LoanColor, onClick: () -> Unit, onViewRepayments: () -> Unit, onDelete: () -> Unit) {
     val progress = (loan.percentagePaid / 100).coerceIn(0.0, 1.0).toFloat()
-    val statusColor = if (loan.status == "active") LoanColor else IncomeColor
+    val statusColor = if (loan.status == "active") themeColor else IncomeColor
     var showConfirm by remember { mutableStateOf(false) }
     val pendingColor = Color(0xFFF59E0B)
 
@@ -203,7 +203,7 @@ fun LoanCard(loan: Loan, onClick: () -> Unit, onViewRepayments: () -> Unit, onDe
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
                     Text("Remaining", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                    Text(formatKsh(loan.remainingBalance), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = LoanColor)
+                    Text(formatKsh(loan.remainingBalance), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = themeColor)
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text("Original", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
@@ -217,7 +217,7 @@ fun LoanCard(loan: Loan, onClick: () -> Unit, onViewRepayments: () -> Unit, onDe
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                color = LoanColor, trackColor = LoanColor.copy(alpha = 0.15f)
+                color = themeColor, trackColor = themeColor.copy(alpha = 0.15f)
             )
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
@@ -226,16 +226,16 @@ fun LoanCard(loan: Loan, onClick: () -> Unit, onViewRepayments: () -> Unit, onDe
                 Text("${String.format("%.1f", loan.percentagePaid)}% paid",
                     fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 Text(formatKsh(loan.amountPaid) + " paid",
-                    fontSize = 11.sp, color = LoanColor.copy(alpha = 0.7f))
+                    fontSize = 11.sp, color = themeColor.copy(alpha = 0.7f))
             }
 
             if (loan.monthlyPayment != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (loan.interestRate != null) {
-                        LoanChip("${loan.interestRate}% interest")
+                        LoanChip("${loan.interestRate}% interest", themeColor)
                     }
-                    LoanChip("${formatKsh(loan.monthlyPayment)}/mo")
+                    LoanChip("${formatKsh(loan.monthlyPayment)}/mo", themeColor)
                 }
             }
 
@@ -245,12 +245,12 @@ fun LoanCard(loan: Loan, onClick: () -> Unit, onViewRepayments: () -> Unit, onDe
                     onClick = onViewRepayments,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, LoanColor)
+                    border = BorderStroke(1.dp, themeColor)
                 ) {
                     Icon(Icons.Default.DateRange, contentDescription = null,
-                        modifier = Modifier.size(16.dp), tint = LoanColor)
+                        modifier = Modifier.size(16.dp), tint = themeColor)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Repayments", color = LoanColor, fontSize = 13.sp)
+                    Text("Repayments", color = themeColor, fontSize = 13.sp)
                 }
                 IconButton(
                     onClick = { showConfirm = true },
@@ -282,9 +282,9 @@ fun LoanCard(loan: Loan, onClick: () -> Unit, onViewRepayments: () -> Unit, onDe
 }
 
 @Composable
-fun LoanChip(text: String) {
-    Surface(shape = RoundedCornerShape(6.dp), color = LoanColor.copy(alpha = 0.1f)) {
+fun LoanChip(text: String, themeColor: Color = LoanColor) {
+    Surface(shape = RoundedCornerShape(6.dp), color = themeColor.copy(alpha = 0.1f)) {
         Text(text, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-            fontSize = 11.sp, color = LoanColor)
+            fontSize = 11.sp, color = themeColor)
     }
 }
