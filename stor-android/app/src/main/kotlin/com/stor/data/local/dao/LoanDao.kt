@@ -6,13 +6,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LoanDao {
-    @Query("SELECT * FROM loans ORDER BY created_at DESC")
+    @Query("SELECT l.* FROM loans l LEFT JOIN repayments r ON l.id = r.loan_id GROUP BY l.id ORDER BY l.created_at DESC")
     fun getAllLoans(): Flow<List<LoanEntity>>
 
     @Query("SELECT * FROM loans ORDER BY created_at DESC")
     suspend fun getAllLoansList(): List<LoanEntity>
 
-    @Query("SELECT * FROM loans WHERE status = 'active' ORDER BY created_at DESC")
+    @Query("SELECT l.* FROM loans l LEFT JOIN repayments r ON l.id = r.loan_id WHERE l.status = 'active' GROUP BY l.id ORDER BY l.created_at DESC")
     fun getActiveLoans(): Flow<List<LoanEntity>>
 
     @Query("SELECT * FROM loans WHERE id = :id")
