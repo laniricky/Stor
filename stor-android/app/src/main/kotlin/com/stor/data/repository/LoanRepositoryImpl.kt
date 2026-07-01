@@ -36,6 +36,13 @@ class LoanRepositoryImpl @Inject constructor(
             } 
         }
 
+    override suspend fun getLoansList(): List<Loan> =
+        dao.getAllLoansList().map { e -> 
+            val totalRepaid = repaymentDao.getTotalRepaidForLoan(e.id) ?: 0.0
+            val domain = e.toDomain()
+            domain.copy(remainingBalance = maxOf(0.0, domain.originalAmount - totalRepaid))
+        }
+
     override fun getActiveLoans(): Flow<List<Loan>> =
         dao.getActiveLoans().map { list -> 
             list.map { e -> 

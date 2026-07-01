@@ -40,14 +40,14 @@ class AuthViewModel @Inject constructor(
             authRepository.login(email, password)
                 .onSuccess { 
                     // Sync all data upon login
-                    val d1 = async { expenseRepository.syncExpenses() }
-                    val d2 = async { incomeRepository.syncIncome() }
-                    val d3 = async { loanRepository.syncLoans() }
+                    val d1 = async { expenseRepository.syncExpenses().onFailure { android.util.Log.e("SYNC_ERROR", "Expenses sync failed", it) } }
+                    val d2 = async { incomeRepository.syncIncome().onFailure { android.util.Log.e("SYNC_ERROR", "Income sync failed", it) } }
+                    val d3 = async { loanRepository.syncLoans().onFailure { android.util.Log.e("SYNC_ERROR", "Loans sync failed", it) } }
                     awaitAll(d1, d2, d3)
                     
                     // Sync repayments for all fetched loans
                     try {
-                        val loans = loanRepository.getLoans().first()
+                        val loans = loanRepository.getLoansList()
                         val repaymentDeferred = loans.map { loan ->
                             async { repaymentRepository.syncRepayments(loan.id) }
                         }

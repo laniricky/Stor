@@ -23,6 +23,7 @@ interface IncomeRepository {
 
 interface LoanRepository {
     fun getLoans(): Flow<List<Loan>>
+    suspend fun getLoansList(): List<Loan>
     fun getActiveLoans(): Flow<List<Loan>>
     suspend fun getLoanById(id: String): Loan?
     suspend fun createLoan(loan: Loan): Result<Loan>
